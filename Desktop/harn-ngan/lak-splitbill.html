@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="la">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ໃບບິນຄ່າທ້ອມ (LAK)</title>
+
+<!-- Fonts: Kanit (display), Sarabun (body/Thai-Lao text), IBM Plex Mono (ledger figures) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@600;700;800&family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase (compat SDK — simplest for CDN + runTransaction) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================
+   ink    : #182226  near-black ledger ink
+   paper  : #ECE7D8  aged ledger-paper (khaki-warm, not cream-default)
+   navy   : #142C46  BCEL-style deep bank navy   (primary)
+   navy2  : #1F4368  lighter navy (surfaces)
+   gold   : #C79A3E  temple-gold accent (owed-to-you / positive)
+   coral  : #B85138  debt-red (you-owe / negative)
+   line   : #D8D0B8  hairline on paper
+   ============================================================ */
+:root{
+  --ink:#211826; --paper:#9d9c99; --navy:#142C46; --navy2:#1F4368;
+  --gold:#1e761c; --coral:#B85138; --line:#afadaf; --paper-card:#d6d5d0b8;
+  --ok:#3F7D5C; --radius:50px;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Sarabun',sans-serif;
+  min-height:100vh;
+  padding-bottom:96px;
+}
+h1,h2,h3,.display{font-family:'Kanit',sans-serif; letter-spacing:.2px;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+button{font-family:inherit; cursor:pointer;}
+button:disabled{opacity:.5; cursor:not-allowed;}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  background:var(--navy); color:#ffffff;
+  padding:18px 30px 22px;
+  border-radius:0 0 50px 50px;
+  position:relative;
+}
+.topbar .brand{display:flex; align-items:center; justify-content:space-between;}
+.topbar h1{margin:0; font-size:20px; font-weight:800; color:#ffffff;}
+.topbar .sub{margin:2px 0 0; font-size:12.5px; opacity:.72; font-weight:500;}
+.admin-btn{
+  background:rgba(255,255,255,.12); color:#fff; border:2px solid rgba(255, 0, 225, 0.25);
+  border-radius:999px; padding:7px 14px; font-size:12.5px; font-weight:600;
+}
+.admin-btn.active{background:var(--gold); color:#20180a; border-color:var(--gold);}
+
+/* ---------- Ticket / receipt hero (signature element) ---------- */
+.ticket{
+  margin:14px 20px 18px; background:var(--paper-card);
+  border-radius:40px; position:relative;
+  box-shadow:0 10px 24px -5px rgba(0, 41, 245, 0.45);
+  padding:20px 50px 16px;
+}
+
+.ticket::before{ top:-1px; }
+.ticket::after{ bottom:-1px; transform:scaleY(-1); }
+.ticket .eyebrow{
+  font-size:20px; text-transform:uppercase; letter-spacing:1.5px; font-weight:700;
+  color:var(--navy2); opacity:.7;
+}
+.ticket .total{
+  font-size:34px; font-weight:700; margin:4px 0 2px; display:flex; align-items:baseline; gap:6px;
+}
+.ticket .total small{font-size:15px; font-weight:600; opacity:.6;}
+.ticket .meta-row{
+  display:flex; justify-content:space-between; margin-top:14px; padding-top:12px;
+  border-top:1px dashed var(--line); font-size:12.5px; color:#080808;
+}
+
+/* ---------- Section labels ---------- */
+.section{padding:0 16px; margin-bottom:20px;}
+.section-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+.section-head h2{font-size:15px; margin:0; font-weight:700; color:var(--navy);}
+.section-head .count{font-size:11.5px; color:#7a7460; font-weight:600;}
+
+/* ---------- Cards ---------- */
+.card{
+  background:var(--paper-card); border-radius:var(--radius); padding:14px 16px; margin-bottom:10px;
+  border:1px solid var(--line);
+}
+.balance-row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+.balance-row .name{font-weight:600; font-size:14.5px;}
+.balance-row .amt{font-weight:700; font-size:15px;}
+.amt.pos{color:var(--ok);}
+.amt.neg{color:var(--coral);}
+.tag{font-size:10.5px; padding:2px 8px; border-radius:999px; font-weight:700; letter-spacing:.3px;}
+.tag.pos{background:#e4f1ea; color:var(--ok);}
+.tag.neg{background:#f4e6e0; color:var(--coral);}
+
+.settle-item{display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid var(--line);}
+.settle-item:last-child{border-bottom:none;}
+.settle-arrow{color:var(--navy2); font-size:16px;}
+.settle-names{flex:1; font-size:13.5px; font-weight:600;}
+.settle-amt{font-weight:700; font-size:14px; color:var(--navy);}
+.pay-btn{
+  background:var(--navy); color:#fff; border:none; border-radius:8px; padding:7px 12px;
+  font-size:12px; font-weight:700;
+}
+
+.expense-row{display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--line);}
+.expense-row:last-child{border-bottom:none;}
+.expense-row .desc{font-weight:600; font-size:13.5px;}
+.expense-row .meta{font-size:11.5px; color:#7a7460; margin-top:2px;}
+.expense-row .amt{font-weight:700; font-size:14px;}
+
+.empty{text-align:center; padding:28px 10px; color:#8b8570; font-size:13px;}
+
+/* ---------- QR card ---------- */
+.qr-card{display:flex; flex-direction:column; align-items:center; gap:10px; padding:18px 16px;}
+.qr-card img{width:180px; height:180px; object-fit:contain; border-radius:8px; background:#fff; border:1px solid var(--line);}
+.qr-card .cap{font-size:12px; color:#7a7460; text-align:center;}
+
+/* ---------- FAB ---------- */
+.fab{
+  position:fixed; right:18px; bottom:18px; background:var(--gold); color:#221a08;
+  border:none; border-radius:999px; padding:15px 20px; font-weight:800; font-size:14px;
+  box-shadow:0 10px 22px -8px rgba(0,0,0,.4); display:flex; align-items:center; gap:8px; z-index:40;
+}
+
+/* ---------- Modal ---------- */
+.overlay{
+  position:fixed; inset:0; background:rgba(15,20,24,.55); display:none;
+  align-items:flex-end; justify-content:center; z-index:100;
+}
+.overlay.show{display:flex;}
+.sheet{
+  background:var(--paper-card); width:100%; max-width:480px; border-radius:20px 20px 0 0;
+  padding:20px 18px calc(20px + env(safe-area-inset-bottom)); max-height:88vh; overflow-y:auto;
+  animation:slideup .22s ease-out;
+}
+@keyframes slideup{from{transform:translateY(24px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+.sheet h3{margin:0 0 4px; font-size:18px; color:var(--navy);}
+.sheet .close{position:absolute; top:14px; right:16px; background:none; border:none; font-size:20px; color:#8b8570;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:12.5px; font-weight:600; color:#54503f; margin-bottom:5px;}
+.field input, .field select, .field textarea{
+  width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--line);
+  font-size:14.5px; font-family:'Sarabun',sans-serif; background:#fff;
+}
+.field input.mono{font-family:'IBM Plex Mono',monospace;}
+.payer-row{display:flex; gap:7px; align-items:center; margin-bottom:8px;}
+.payer-row select{flex:1.3;}
+.payer-row input{flex:1; min-width:0;}
+.payer-row .rm-payer{
+  background:none; border:none; color:var(--coral); font-size:18px; font-weight:800; flex:0 0 auto; padding:0 4px;
+}
+.chip-list{display:flex; flex-wrap:wrap; gap:8px;}
+.chip{
+  padding:8px 13px; border-radius:999px; border:1px solid var(--line); font-size:13px; font-weight:600;
+  background:#fff; color:var(--ink);
+}
+.chip.on{background:var(--navy); color:#fff; border-color:var(--navy);}
+.primary-btn{
+  width:100%; background:var(--navy); color:#fff; border:none; border-radius:12px; padding:13px;
+  font-weight:700; font-size:15px; display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.ghost-btn{
+  width:100%; background:transparent; color:var(--coral); border:1px solid var(--coral); border-radius:12px;
+  padding:11px; font-weight:700; font-size:14px; margin-top:8px;
+}
+.err-msg{color:var(--coral); font-size:12.5px; margin-top:6px; font-weight:600; display:none;}
+.err-msg.show{display:block;}
+.spinner{
+  width:15px; height:15px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff;
+  border-radius:50%; animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* payment request card (admin) */
+.req-card{padding:14px 16px;}
+.req-card .top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+.req-card .who{font-weight:700; font-size:14px;}
+.req-card .status-pill{font-size:10.5px; padding:2px 9px; border-radius:999px; font-weight:700;}
+.status-pill.pending{background:#f4ecd6; color:#8a6a1c;}
+.status-pill.approved{background:#e4f1ea; color:var(--ok);}
+.status-pill.partial{background:#eee1d2; color:#96602c;}
+.status-pill.rejected{background:#f4e6e0; color:var(--coral);}
+.req-card .num{font-size:12px; color:#7a7460; margin-bottom:10px;}
+.req-actions{display:flex; gap:8px;}
+.req-actions button{flex:1; border:none; border-radius:9px; padding:9px 6px; font-size:12px; font-weight:700;}
+.act-full{background:var(--ok); color:#fff;}
+.act-partial{background:var(--gold); color:#20180a;}
+.act-reject{background:var(--coral); color:#fff;}
+
+.member-pill{
+  display:flex; align-items:center; justify-content:space-between; padding:10px 4px;
+  border-bottom:1px solid var(--line); font-size:13.5px;
+}
+.member-pill:last-child{border-bottom:none;}
+.del-x{background:none; border:none; color:var(--coral); font-size:16px; font-weight:800;}
+
+.toast{
+  position:fixed; left:50%; bottom:90px; transform:translateX(-50%);
+  background:var(--ink); color:#fff; padding:10px 18px; border-radius:999px; font-size:13px;
+  z-index:200; opacity:0; transition:opacity .25s; font-weight:600; pointer-events:none;
+}
+.toast.show{opacity:1;}
+
+.lock-screen{
+  position:fixed; inset:0; background:var(--navy); color:#fff; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:16px; z-index:300; padding:24px; text-align:center;
+}
+.lock-screen input{
+  width:200px; text-align:center; letter-spacing:8px; font-size:22px; padding:12px; border-radius:12px;
+  border:none; font-family:'IBM Plex Mono',monospace;
+}
+.hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<!-- ============ TOP BAR ============ -->
+<div class="topbar">
+  <div class="brand">
+    <div>
+      <h1>ໃບບິນ · ຄ່າທ້ອມ</h1>
+      <p class="sub" id="groupSubtitle">ຍອດລວມ (LAK)</p>
+    </div>
+    <button class="admin-btn" id="adminToggleBtn">🔑 Admin</button>
+  </div>
+</div>
+
+<!-- ============ HERO TICKET ============ -->
+<div class="ticket">
+  <div class="eyebrow">ຍອດລວມທັງຫມົດ</div>
+  <div class="total mono"><span id="totalExpense">0</span><small>ກີບ / LAK</small></div>
+  <div class="meta-row">
+    <span id="memberCountLabel">ສະມາຊິກ 0 ຄົນ</span>
+    <span id="expenseCountLabel">ລາຍການ 0 ລາຍການ</span>
+  </div>
+</div>
+
+<!-- ============ BALANCES ============ -->
+<div class="section">
+  <div class="section-head"><h2>ຈຳນວນທີ່ຕ້ອງຈ່າຍ</h2><span class="count" id="balanceCount"></span></div>
+  <div id="balanceList" class="card" style="padding:6px 16px;"></div>
+</div>
+
+<!-- ============ SETTLEMENT SUGGESTIONS (hub: everyone <-> collector/Admin) ============ -->
+<div class="section">
+  <div class="section-head"><h2>ຕ້ອງຈ່າຍ</h2><span class="count">--</span></div>
+  <div id="settleInList" class="card" style="padding:4px 16px;"></div>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>ຕ້ອງຈ່າຍຄືນ</h2><span class="count">--</span></div>
+  <div id="settleOutList" class="card" style="padding:4px 16px;"></div>
+</div>
+
+<!-- ============ QR ============ -->
+<div class="section">
+  <div class="section-head"><h2>QR CODE (BCEL One)</h2></div>
+  <div class="card qr-card">
+    <img id="qrImg" src="" alt="BCEL One QR" style="display:none;">
+    <button type="button" class="pay-btn" id="downloadQrBtn" style="display:none; margin-top:4px; background:var(--navy2);">📥 ດາວໂຫລດ QR Code</button>
+    <div id="qrEmpty" class="empty" style="padding:8px;">ຍັງບໍ່ມີຮູບ QR — แอดมินสามารถเพิ่มลิงก์รูปได้ในโหมดแอดมิน</div>
+    <div class="cap">ສະແກນແລ້ວກົດ "ແຈ້ງໂອນເງິນ" </div>
+  </div>
+</div>
+
+
+<!-- ============ EXPENSE HISTORY ============ -->
+<div class="section">
+  <div class="section-head"><h2>ປະຫວັດລາຍການ</h2><span class="count" id="expListCount"></span></div>
+  <div id="expenseList" class="card" style="padding:4px 16px;"></div>
+</div>
+
+<!-- ============ ADMIN: MEMBERS ============ -->
+<div class="section admin-only hidden" id="adminMembersSection">
+  <div class="section-head"><h2>ຈັດການສະມາຊິກ</h2></div>
+  <div class="card" style="padding:6px 16px;" id="memberMgmtList"></div>
+  <div class="card">
+    <div class="field" style="margin-bottom:8px;">
+      <input type="text" id="newMemberName" placeholder="ชื่อสมาชิกใหม่">
+    </div>
+    <button class="primary-btn" id="addMemberBtn"><span>+ ເພີ່ມສະມາຊິກ</span></button>
+  </div>
+</div>
+
+<!-- ============ ADMIN: PAYMENT REQUESTS ============ -->
+<div class="section admin-only hidden" id="adminRequestsSection">
+  <div class="section-head"><h2>ຄຳຂໍແຈ້ງໂອນເງິນ</h2><span class="count" id="reqCount"></span></div>
+  <div id="requestList"></div>
+</div>
+
+<!-- ============ ADMIN: QR + SETTINGS ============ -->
+<div class="section admin-only hidden" id="adminSettingsSection">
+  <div class="section-head"><h2>ຕັ້ງຄ່າກຸ່ນ</h2></div>
+  <div class="card">
+    <div class="field">
+      <label>ຜູ້ດູແລ (Admin ທີ່ທຸກຄົນໂອນເງິນໄປຮວມ)</label>
+      <select id="collectorSelect"></select>
+    </div>
+    <button class="primary-btn" id="saveCollectorBtn"><span>ບັນທຶກຜູ້ດູແລ</span></button>
+    <p style="font-size:11.5px; color:#7a7460; margin:10px 0 0;">ทุกคน (ยกเว้นคนนี้) จะโอนเงินเข้าหาคนนี้ก่อน แล้วคนนี้จะเป็นคนโอนคืนให้คนที่สำรองจ่ายเกินส่วนของตัวเอง</p>
+  </div>
+  <div class="card">
+    <div class="field">
+      <label>ลิงก์รูป QR BCEL One (Static Image URL)</label>
+      <input type="text" id="qrUrlInput" placeholder="https://...">
+    </div>
+    <button class="primary-btn" id="saveQrBtn"><span>บันทึกลิงก์ QR</span></button>
+  </div>
+</div>
+
+<!-- ============ ADMIN: LOGS ============ -->
+<div class="section admin-only hidden" id="adminLogsSection">
+  <div class="section-head"><h2>ປະຫວັດ (Audit Log)</h2></div>
+  <div id="logList" class="card" style="padding:6px 16px; max-height:260px; overflow-y:auto;"></div>
+</div>
+
+<!-- ============ FAB ============ -->
+<button class="fab" id="payFab">💸 ແຈ້ງໂອນເງິນ</button>
+<button class="fab" id="addExpFab" style="right:auto; left:18px; background:var(--navy); color:#fff;">+ ເພີ່ມບິນ</button>
+
+<!-- ============ MODAL: MARK AS PAID ============ -->
+<div class="overlay" id="payOverlay">
+  <div class="sheet" style="position:relative;">
+    <button class="close" data-close="payOverlay">✕</button>
+    <h3>แจ้งโอนเงิน</h3>
+    <p style="font-size:12.5px; color:#7a7460; margin-top:0;"> </p>
+    <div class="field">
+      <label>ຂ້ອຍແມ່ນໃຜ</label>
+      <select id="payFromSelect"></select>
+    </div>
+    <div class="field">
+      <label>ໂອນໃຫ້ໃຜ</label>
+      <input type="text" id="payToDisplay" disabled class="mono" style="background:#f0ece0;">
+    </div>
+    <div class="field">
+      <label>ຈຳນວນເງິນ (ກີບ)</label>
+      <input type="number" min="1" step="1" class="mono" id="payAmountInput" placeholder="เช่น 30000">
+      <div class="err-msg" id="payErr">ໃສ່ຈຳນວນເງິນທີ່ຖືກຕ້ອງ (ຫລາຍກວ່າ 0)</div>
+    </div>
+    <button class="primary-btn" id="submitPayBtn"><span>ສົ່ງຄຳຂໍແຈ້ງໂອນເງິນ</span></button>
+  </div>
+</div>
+
+<!-- ============ MODAL: ADD EXPENSE ============ -->
+<div class="overlay" id="expOverlay">
+  <div class="sheet" style="position:relative;">
+    <button class="close" data-close="expOverlay">✕</button>
+    <h3>ເພີ່ມລາຍການຄ່າໃຊ້ຈ່າຍ</h3>
+    <div class="field">
+      <label>ລາຍລະອຽດ</label>
+      <input type="text" id="expDescInput" placeholder=" ເຊັ່ນ ກະທ້ອມ ">
+    </div>
+
+    <div class="field">
+      <label>ໃຜອອກເງຶນນຳແນ່ — ເພີ່ມໄດ້ຫລາຍຄົນ</label>
+      <div id="payerRows"></div>
+      <button type="button" class="ghost-btn" id="addPayerRowBtn" style="color:var(--navy); border-color:var(--navy); margin-top:4px;">+ ເພີ່ມຄົນອອກເງິນ</button>
+    </div>
+
+    <div class="card" style="background:#F1EDE0; margin:12px 0;">
+      <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700;">
+        <span>ຍອດລວມບິນນີ້</span>
+        <span class="mono" id="expTotalPreview">0 ກີບ</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label> ຫານໃຜແນ່ </label>
+      <div class="chip-list" id="expSplitChips"></div>
+    </div>
+    <div class="err-msg" id="expErr">ໃສ່ຂໍ້ມູນໃຫ້ຄົບ-ຖືກຕ້ອງ</div>
+    <button class="primary-btn" id="submitExpBtn"><span>ບັນທຶກລາຍການ</span></button>
+  </div>
+</div>
+
+<!-- ============ MODAL: PARTIAL/CUSTOM APPROVE ============ -->
+<div class="overlay" id="partialOverlay">
+  <div class="sheet" style="position:relative;">
+    <button class="close" data-close="partialOverlay">✕</button>
+    <h3>อนุมัติยอดบางส่วน / กำหนดเอง</h3>
+    <div class="field">
+      <label>ยอดที่จะอนุมัติ (กีบ)</label>
+      <input type="number" min="1" step="1" class="mono" id="partialAmountInput">
+    </div>
+    <button class="primary-btn" id="confirmPartialBtn"><span>ยืนยันอนุมัติ</span></button>
+  </div>
+</div>
+
+<!-- ============ MODAL: REJECT REASON ============ -->
+<div class="overlay" id="rejectOverlay">
+  <div class="sheet" style="position:relative;">
+    <button class="close" data-close="rejectOverlay">✕</button>
+    <h3>ปฏิเสธคำขอ</h3>
+    <div class="field">
+      <label>เหตุผล</label>
+      <textarea id="rejectReasonInput" rows="3" placeholder="ระบุเหตุผล เช่น ยอดไม่ตรง"></textarea>
+    </div>
+    <button class="primary-btn" style="background:var(--coral);" id="confirmRejectBtn"><span>ยืนยันปฏิเสธ</span></button>
+  </div>
+</div>
+
+<!-- ============ ADMIN PIN LOCK ============ -->
+<div class="lock-screen hidden" id="pinLock">
+  <h3 style="margin:0;">🔑 โหมดแอดมิน</h3>
+  <p style="opacity:.75; font-size:13px; margin:0;">กรอกรหัส PIN เพื่อเข้าสู่โหมดจัดการ</p>
+  <input type="password" id="pinInput" inputmode="numeric" maxlength="8" placeholder="••••">
+  <div class="err-msg show" id="pinErr" style="display:none; color:#ffb3a0;">รหัสไม่ถูกต้อง</div>
+  <button class="primary-btn" style="width:200px;" id="pinSubmitBtn"><span>เข้าสู่ระบบ</span></button>
+  <button class="ghost-btn" style="width:200px; color:#fff; border-color:rgba(255,255,255,.4);" id="pinCancelBtn">ยกเลิก</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================================================================
+   FIREBASE INIT
+   ---------------------------------------------------------------
+   👉 แทนที่ config ด้านล่างด้วยค่าจากโปรเจกต์ Firebase ของคุณ
+   (Firebase Console > Project settings > SDK setup and configuration)
+   ใช้ Realtime Database เท่านั้น (ไม่ใช้ Firebase Storage)
+   ================================================================ */
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBUFJJsUYhXB5HIM3r7bOIp6tHrchi5UxE",
+  authDomain: "cosmo-b.firebaseapp.com",
+  databaseURL: "https://cosmo-b-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "cosmo-b",
+  storageBucket: "cosmo-b.firebasestorage.app",
+  messagingSenderId: "977636102498",
+  appId: "1:977636102498:web:a8b78d9a7177615e511c3b",
+  measurementId: "G-XJKJDGK7L7"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* Suggested Realtime Database security rules (paste in Firebase console):
+{
+  "rules": {
+    "members":  { ".read": true, ".write": true },
+    "expenses": { ".read": true, ".write": true },
+    "payments": { ".read": true, ".write": true },
+    "logs":     { ".read": true, ".write": true, ".indexOn": ["ts"] },
+    "settings": { ".read": true, ".write": true }
+  }
+}
+NOTE: these open rules are fine for a small trusted friend-group demo. Since the
+Admin PIN here is only a client-side UI gate (not real auth), do not use this
+for anything beyond a casual private group — anyone with the DB URL could
+technically write directly. For real protection, move PIN verification to
+Firebase Auth + custom claims or Cloud Functions.
+*/
+
+let state = {
+  members: {},      // id -> {name, balance}
+  expenses: {},      // id -> {...}
+  payments: {},      // id -> {...}
+  settings: {},
+  isAdmin: false
+};
+
+/* ---------------- helpers ---------------- */
+function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function openSheet(id){ document.getElementById(id).classList.add('show'); }
+function closeSheet(id){ document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('[data-close]').forEach(b=>{
+  b.addEventListener('click', ()=>closeSheet(b.dataset.close));
+});
+function setLoading(btn, loading, label){
+  btn.disabled = loading;
+  btn.querySelector('span').innerHTML = loading ? '<span class="spinner"></span>' : label;
+}
+function membersArr(){
+  return Object.entries(state.members).map(([id,m])=>({id, ...m}));
+}
+function validAmount(v){
+  if (v === '' || v === null || v === undefined) return null;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.round(n);
+}
+
+/* ---------------- realtime listeners ---------------- */
+db.ref('members').on('value', snap=>{ state.members = snap.val() || {}; renderAll(); });
+db.ref('expenses').on('value', snap=>{ state.expenses = snap.val() || {}; renderAll(); });
+db.ref('payments').on('value', snap=>{ state.payments = snap.val() || {}; renderAll(); });
+db.ref('settings').on('value', snap=>{ state.settings = snap.val() || {}; renderAll(); });
+db.ref('logs').limitToLast(60).on('value', snap=>{ renderLogs(snap.val() || {}); });
+
+/* ---------------- audit log ---------------- */
+function writeLog(message){
+  db.ref('logs').push({
+    message,
+    role: state.isAdmin ? 'admin' : 'member',
+    ts: firebase.database.ServerValue.TIMESTAMP
+  });
+}
+
+/* ================================================================
+   RENDER
+   ================================================================ */
+function renderAll(){
+  renderHero();
+  renderBalances();
+  renderSettlement();
+  renderQr();
+  renderExpenses();
+  if(state.isAdmin){
+    renderMemberMgmt();
+    renderRequests();
+    renderCollectorSelect();
+  }
+}
+
+function renderCollectorSelect(){
+  const sel = document.getElementById('collectorSelect');
+  const members = membersArr();
+  const current = state.settings.collectorMemberId;
+  sel.innerHTML = members.map(m=>`<option value="${m.id}" ${m.id===current?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
+}
+
+function renderHero(){
+  const exps = Object.values(state.expenses);
+  const total = exps.reduce((s,e)=>s+(e.amount||0),0);
+  document.getElementById('totalExpense').textContent = fmt(total);
+  document.getElementById('memberCountLabel').textContent = `สมาชิก ${membersArr().length} คน`;
+  document.getElementById('expenseCountLabel').textContent = `รายการ ${exps.length} รายการ`;
+}
+
+function renderBalances(){
+  const list = document.getElementById('balanceList');
+  const members = membersArr();
+  const collectorId = state.settings.collectorMemberId;
+  document.getElementById('balanceCount').textContent = members.length + ' คน';
+  if(members.length === 0){
+    list.innerHTML = '<div class="empty">ยังไม่มีสมาชิกในระบบ — ให้แอดมินเพิ่มสมาชิกก่อน</div>';
+    return;
+  }
+  list.innerHTML = members
+    .sort((a,b)=>(b.balance||0)-(a.balance||0))
+    .map(m=>{
+      const bal = Math.round(m.balance||0);
+      const cls = bal >= 0 ? 'pos' : 'neg';
+      const isCollector = m.id === collectorId;
+      const tagText = isCollector ? 'ຜູ້ດູແລກອງກາງ' : (bal >= 0 ? 'รอรับเงิน' : 'ต้องจ่าย');
+      const showRefundBtn = state.isAdmin && !isCollector && bal > 0 && collectorId;
+      return `<div class="balance-row" style="padding:10px 0; border-bottom:1px solid var(--line);">
+        <span class="name">${escapeHtml(m.name)}</span>
+        <span style="display:flex; align-items:center; gap:8px;">
+          <span class="tag ${isCollector ? '' : cls}" ${isCollector ? 'style="background:#eee1cf; color:#8a6a1c;"' : ''}>${tagText}</span>
+          <span class="amt mono ${cls}">${fmt(Math.abs(bal))}</span>
+          ${showRefundBtn ? `<button class="pay-btn" data-refund="${m.id}">คืนเงิน</button>` : ''}
+        </span>
+      </div>`;
+    }).join('');
+  list.querySelectorAll('[data-refund]').forEach(b=>{
+    b.addEventListener('click', ()=>refundCreditor(b.dataset.refund));
+  });
+}
+
+/* Admin: directly record that the collector refunded a creditor member. */
+function refundCreditor(memberId){
+  const collectorId = state.settings.collectorMemberId;
+  const member = state.members[memberId];
+  if(!collectorId || !member) return;
+  const suggested = Math.round(member.balance || 0);
+  const val = prompt(`คืนเงินให้ ${member.name} เท่าไหร่ (กีบ)?`, suggested);
+  if(val === null) return;
+  const amount = validAmount(val);
+  if(!amount){ toast('จำนวนเงินไม่ถูกต้อง'); return; }
+
+  Promise.all([
+    db.ref('members/'+collectorId+'/balance').transaction(cur => Math.round((cur||0) + amount)),
+    db.ref('members/'+memberId+'/balance').transaction(cur => Math.round((cur||0) - amount))
+  ]).then(()=>{
+    const collectorName = state.members[collectorId]?.name || '—';
+    return db.ref('payments').push({
+      from: collectorId, to: memberId, amountTransferred: amount, resolvedAmount: amount,
+      status: 'approved', note: 'คืนเงินจากกองกลาง', ts: firebase.database.ServerValue.TIMESTAMP
+    }).then(()=>{
+      writeLog(`กองกลาง (${collectorName}) โอนคืนให้ ${member.name} จำนวน ${fmt(amount)} ກີບ`);
+      toast('บันทึกการคืนเงินแล้ว');
+    });
+  }).catch(()=>toast('เกิดข้อผิดพลาด ลองใหม่อีกครั้ง'));
+}
+
+/* Hub model: everyone settles through the designated collector (Admin),
+   not with each other directly. Debtors -> collector, collector -> creditors. */
+function renderSettlement(){
+  const inList = document.getElementById('settleInList');
+  const outList = document.getElementById('settleOutList');
+  const collectorId = state.settings.collectorMemberId;
+  const collector = state.members[collectorId];
+
+  if(!collectorId || !collector){
+    const msg = '<div class="empty">ยังไม่ได้ตั้งค่า "ຜູ້ດູແລກອງກາງ" — ให้แอดมินตั้งค่าก่อนในโหมดแอดมิน</div>';
+    inList.innerHTML = msg; outList.innerHTML = msg;
+    return;
+  }
+
+  const members = membersArr().filter(m=>m.id !== collectorId);
+  const debtors = members.filter(m=>Math.round(m.balance||0) < 0);
+  const creditors = members.filter(m=>Math.round(m.balance||0) > 0);
+
+  inList.innerHTML = debtors.length===0
+    ? '<div class="empty">ບໍ່ມີຄົນໃດຕິດຄ້າງກັບຜູ້ດູແລ 🎉</div>'
+    : debtors.map(m=>`
+      <div class="settle-item">
+        <span class="settle-names">${escapeHtml(m.name)} <span class="settle-arrow">→</span> ${escapeHtml(collector.name)}</span>
+        <span class="settle-amt mono">${fmt(Math.abs(m.balance))} ກີບ</span>
+      </div>`).join('');
+
+  outList.innerHTML = creditors.length===0
+    ? '<div class="empty">ຜູ້ດູແລບໍ່ໄດ້ຄ້າງເງິນໃຜ 🎉</div>'
+    : creditors.map(m=>`
+      <div class="settle-item">
+        <span class="settle-names">${escapeHtml(collector.name)} <span class="settle-arrow">→</span> ${escapeHtml(m.name)}</span>
+        <span class="settle-amt mono">${fmt(m.balance)} ກີບ</span>
+      </div>`).join('');
+}
+
+function renderQr(){
+  const url = state.settings.qrImageUrl;
+  const img = document.getElementById('qrImg');
+  const empty = document.getElementById('qrEmpty');
+  const dlBtn = document.getElementById('downloadQrBtn');
+
+  if(url){ 
+    img.src = url; 
+    img.style.display = 'block'; 
+    if(dlBtn) dlBtn.style.display = 'inline-block';
+    empty.style.display = 'none'; 
+  } else { 
+    img.style.display = 'none'; 
+    if(dlBtn) dlBtn.style.display = 'none';
+    empty.style.display = 'block'; 
+  }
+  document.getElementById('qrUrlInput').value = url || '';
+}
+
+function renderExpenses(){
+  const list = document.getElementById('expenseList');
+  const exps = Object.entries(state.expenses).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
+  document.getElementById('expListCount').textContent = exps.length + ' รายการ';
+  if(exps.length === 0){ list.innerHTML = '<div class="empty">ยังไม่มีรายการค่าใช้จ่าย</div>'; return; }
+  list.innerHTML = exps.map(([id,e])=>{
+    const payers = e.payers || (e.paidBy ? [{memberId:e.paidBy, amount:e.amount}] : []); // back-compat
+    const payerText = payers.map(p=>{
+      const nm = state.members[p.memberId]?.name || '—';
+      return `${escapeHtml(nm)} (${fmt(p.amount)}${p.note ? ' · '+escapeHtml(p.note) : ''})`;
+    }).join(', ');
+    const splitCount = (e.splitAmong||[]).length;
+    return `<div class="expense-row">
+      <div>
+        <div class="desc">${escapeHtml(e.description||'-')}</div>
+        <div class="meta">ออกเงิน: ${payerText || '—'} · หาร ${splitCount} คน</div>
+      </div>
+      <div class="amt mono">${fmt(e.amount)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMemberMgmt(){
+  const list = document.getElementById('memberMgmtList');
+  const members = membersArr();
+  if(members.length===0){ list.innerHTML='<div class="empty">ยังไม่มีสมาชิก</div>'; return; }
+  list.innerHTML = members.map(m=>`
+    <div class="member-pill">
+      <span>${escapeHtml(m.name)} <span class="mono" style="color:#7a7460; font-size:12px;">(${fmt(m.balance||0)})</span></span>
+      <button class="del-x" data-del-member="${m.id}">✕</button>
+    </div>`).join('');
+  list.querySelectorAll('[data-del-member]').forEach(btn=>{
+    btn.addEventListener('click', ()=>deleteMember(btn.dataset.delMember));
+  });
+}
+
+function renderRequests(){
+  const list = document.getElementById('requestList');
+  const entries = Object.entries(state.payments).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
+  document.getElementById('reqCount').textContent = entries.filter(([,p])=>p.status==='pending').length + ' รอดำเนินการ';
+  if(entries.length===0){ list.innerHTML='<div class="card empty">ยังไม่มีคำขอแจ้งโอน</div>'; return; }
+  list.innerHTML = entries.map(([id,p])=>{
+    const fromName = state.members[p.from]?.name || '—';
+    const toName = state.members[p.to]?.name || '—';
+    const pillClass = p.status;
+    const pillText = {pending:'รอตรวจสอบ', approved:'อนุมัติแล้ว', partial:'อนุมัติบางส่วน', rejected:'ปฏิเสธ'}[p.status] || p.status;
+    const actions = p.status==='pending' ? `
+      <div class="req-actions">
+        <button class="act-full" data-full="${id}">✓ Full</button>
+        <button class="act-partial" data-partial="${id}">± Partial</button>
+        <button class="act-reject" data-reject="${id}">✕ Reject</button>
+      </div>` : (p.status==='rejected' && p.rejectReason ? `<div class="meta" style="font-size:11.5px; color:#7a7460;">เหตุผล: ${escapeHtml(p.rejectReason)}</div>` : '');
+    return `<div class="card req-card">
+      <div class="top">
+        <span class="who">${escapeHtml(fromName)} → ${escapeHtml(toName)}</span>
+        <span class="status-pill ${pillClass}">${pillText}</span>
+      </div>
+      <div class="num mono">แจ้งโอน ${fmt(p.amountTransferred)} ກີບ${p.resolvedAmount!==undefined ? ` · อนุมัติจริง ${fmt(p.resolvedAmount)} ກີບ` : ''}</div>
+      ${actions}
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-full]').forEach(b=>b.addEventListener('click', ()=>approvePayment(b.dataset.full, 'full')));
+  list.querySelectorAll('[data-partial]').forEach(b=>b.addEventListener('click', ()=>openPartialModal(b.dataset.partial)));
+  list.querySelectorAll('[data-reject]').forEach(b=>b.addEventListener('click', ()=>openRejectModal(b.dataset.reject)));
+}
+
+function renderLogs(logs){
+  const list = document.getElementById('logList');
+  const entries = Object.values(logs).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  if(entries.length===0){ list.innerHTML='<div class="empty">ยังไม่มีประวัติ</div>'; return; }
+  list.innerHTML = entries.map(l=>{
+    const d = l.ts ? new Date(l.ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) : '';
+    return `<div style="padding:8px 0; border-bottom:1px solid var(--line); font-size:12.5px;">
+      <div>${escapeHtml(l.message)}</div>
+      <div style="color:#a09a80; font-size:11px; margin-top:2px;">${d} · ${l.role==='admin'?'แอดมิน':'สมาชิก'}</div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ================================================================
+   ADMIN PIN LOCK
+   ================================================================ */
+document.getElementById('adminToggleBtn').addEventListener('click', ()=>{
+  if(state.isAdmin){
+    state.isAdmin = false;
+    document.getElementById('adminToggleBtn').classList.remove('active');
+    document.getElementById('adminToggleBtn').textContent = '🔑 Admin';
+    document.querySelectorAll('.admin-only').forEach(el=>el.classList.add('hidden'));
+  } else {
+    document.getElementById('pinLock').classList.remove('hidden');
+    document.getElementById('pinInput').value='';
+    document.getElementById('pinErr').style.display='none';
+  }
+});
+document.getElementById('pinCancelBtn').addEventListener('click', ()=>{
+  document.getElementById('pinLock').classList.add('hidden');
+});
+document.getElementById('pinSubmitBtn').addEventListener('click', checkPin);
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPin(); });
+
+function checkPin(){
+  const entered = document.getElementById('pinInput').value.trim();
+  const real = state.settings.adminPin;
+  if(!real){
+    // first-time setup: whatever is entered becomes the PIN
+    if(entered.length < 4){ 
+      document.getElementById('pinErr').textContent = 'ตั้งรหัส PIN อย่างน้อย 4 หลัก';
+      document.getElementById('pinErr').style.display='block';
+      return;
+    }
+    db.ref('settings/adminPin').set(entered);
+    activateAdmin();
+    toast('ตั้งรหัส PIN สำเร็จ — จำไว้สำหรับครั้งถัดไป');
+    return;
+  }
+  if(entered === real){ activateAdmin(); }
+  else {
+    document.getElementById('pinErr').textContent = 'รหัสไม่ถูกต้อง';
+    document.getElementById('pinErr').style.display='block';
+  }
+}
+function activateAdmin(){
+  state.isAdmin = true;
+  document.getElementById('pinLock').classList.add('hidden');
+  document.getElementById('adminToggleBtn').classList.add('active');
+  document.getElementById('adminToggleBtn').textContent = '✓ Admin';
+  document.querySelectorAll('.admin-only').forEach(el=>el.classList.remove('hidden'));
+  renderAll();
+}
+
+/* ================================================================
+   ADD MEMBER / DELETE MEMBER  (Member-Zero Guard elsewhere)
+   ================================================================ */
+document.getElementById('addMemberBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('addMemberBtn');
+  const input = document.getElementById('newMemberName');
+  const name = input.value.trim();
+  if(!name){ toast('กรุณากรอกชื่อสมาชิก'); return; }
+  setLoading(btn, true, '+ เพิ่มสมาชิก');
+  const ref = db.ref('members').push();
+  ref.set({ name, balance: 0 })
+    .then(()=>{ writeLog(`เพิ่มสมาชิกใหม่: ${name}`); input.value=''; toast('เพิ่มสมาชิกแล้ว'); })
+    .catch(()=>toast('เกิดข้อผิดพลาด ลองใหม่อีกครั้ง'))
+    .finally(()=>setLoading(btn, false, '+ เพิ่มสมาชิก'));
+});
+
+function deleteMember(id){
+  const m = state.members[id];
+  if(!m) return;
+  if(id === state.settings.collectorMemberId){
+    toast('ลบไม่ได้: คนนี้ถูกตั้งเป็นຜູ້ດູແລກອງກາງอยู่ กรุณาเปลี่ยนຜູ້ດູແລກອງກາງก่อน');
+    return;
+  }
+  if(Math.round(m.balance||0) !== 0){
+    toast('ลบไม่ได้: สมาชิกยังมียอดค้างอยู่ กรุณาเคลียร์ยอดก่อน');
+    return;
+  }
+  if(!confirm(`ลบสมาชิก "${m.name}" ใช่หรือไม่?`)) return;
+  db.ref('members/'+id).remove()
+    .then(()=>{ writeLog(`ลบสมาชิก: ${m.name}`); toast('ลบสมาชิกแล้ว'); })
+    .catch(()=>toast('เกิดข้อผิดพลาด'));
+}
+
+/* ================================================================
+   ADD EXPENSE  (with runTransaction on every affected member balance)
+   ================================================================ */
+document.getElementById('addExpFab').addEventListener('click', ()=>{
+  if(membersArr().length === 0){ toast('กรุณาให้แอดมินเพิ่มสมาชิกก่อน'); return; }
+  populateExpenseModal();
+  document.getElementById('expErr').classList.remove('show');
+  openSheet('expOverlay');
+});
+
+function payerRowTemplate(members){
+  const opts = members.map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+  return `<div class="payer-row">
+    <select class="payer-member">${opts}</select>
+    <input type="number" min="1" step="1" class="mono payer-amount" placeholder="จำนวนเงิน">
+    <button type="button" class="rm-payer">✕</button>
+  </div>`;
+}
+
+function updateExpTotalPreview(){
+  const total = Array.from(document.querySelectorAll('#payerRows .payer-amount'))
+    .reduce((s,inp)=> s + (validAmount(inp.value) || 0), 0);
+  document.getElementById('expTotalPreview').textContent = fmt(total) + ' ກີບ';
+}
+
+function bindPayerRow(row){
+  row.querySelector('.payer-amount').addEventListener('input', updateExpTotalPreview);
+  row.querySelector('.rm-payer').addEventListener('click', ()=>{
+    if(document.querySelectorAll('#payerRows .payer-row').length <= 1) return; // keep at least 1 row
+    row.remove();
+    updateExpTotalPreview();
+  });
+}
+
+document.getElementById('addPayerRowBtn').addEventListener('click', ()=>{
+  const wrap = document.getElementById('payerRows');
+  const members = membersArr();
+  wrap.insertAdjacentHTML('beforeend', payerRowTemplate(members));
+  bindPayerRow(wrap.lastElementChild);
+});
+
+function populateExpenseModal(){
+  const members = membersArr();
+  const payerWrap = document.getElementById('payerRows');
+  payerWrap.innerHTML = payerRowTemplate(members);
+  bindPayerRow(payerWrap.firstElementChild);
+
+  const chipWrap = document.getElementById('expSplitChips');
+  chipWrap.innerHTML = members.map(m=>`<button type="button" class="chip on" data-id="${m.id}">${escapeHtml(m.name)}</button>`).join('');
+  chipWrap.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('click', ()=>c.classList.toggle('on'));
+  });
+  document.getElementById('expDescInput').value='';
+  updateExpTotalPreview();
+}
+
+document.getElementById('submitExpBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('submitExpBtn');
+  const errEl = document.getElementById('expErr');
+  const desc = document.getElementById('expDescInput').value.trim();
+  const splitIds = Array.from(document.querySelectorAll('#expSplitChips .chip.on')).map(c=>c.dataset.id);
+
+  // gather payer rows: each must have a member + valid amount > 0
+  const payerRows = Array.from(document.querySelectorAll('#payerRows .payer-row'));
+  const payers = [];
+  let payersValid = true;
+  payerRows.forEach(row=>{
+    const memberId = row.querySelector('.payer-member').value;
+    const amount = validAmount(row.querySelector('.payer-amount').value);
+    if(!memberId || !amount){ payersValid = false; return; }
+    payers.push({ memberId, amount });
+  });
+  // merge duplicate payer entries (same person entered on two rows)
+  const mergedPayers = {};
+  payers.forEach(p=>{ mergedPayers[p.memberId] = (mergedPayers[p.memberId]||0) + p.amount; });
+  const totalAmount = Object.values(mergedPayers).reduce((s,v)=>s+v,0);
+
+  if(!desc || !payersValid || payers.length === 0 || totalAmount <= 0 || splitIds.length === 0){
+    errEl.textContent = 'กรุณากรอกข้อมูลให้ครบและถูกต้อง (ทุกคนที่ออกเงินต้องระบุจำนวนมากกว่า 0)';
+    errEl.classList.add('show');
+    return;
+  }
+  errEl.classList.remove('show');
+  setLoading(btn, true, 'บันทึกรายการ');
+
+  const perPerson = Math.round(totalAmount / splitIds.length);
+  const expenseRef = db.ref('expenses').push();
+
+  // Run one transaction per affected member balance for safe concurrent updates.
+  const balanceDelta = {}; // id -> delta
+  Object.entries(mergedPayers).forEach(([id, amt])=>{ balanceDelta[id] = (balanceDelta[id]||0) + amt; });
+  splitIds.forEach(id=>{ balanceDelta[id] = (balanceDelta[id]||0) - perPerson; });
+
+  const memberOps = Object.entries(balanceDelta).map(([id, delta])=>
+    db.ref('members/'+id+'/balance').transaction(current => Math.round((current||0) + delta))
+  );
+
+  const payersList = Object.entries(mergedPayers).map(([memberId, amount])=>({memberId, amount}));
+
+  Promise.all(memberOps)
+    .then(()=> expenseRef.set({
+        description: desc, amount: totalAmount, payers: payersList, splitAmong: splitIds, perPerson,
+        ts: firebase.database.ServerValue.TIMESTAMP
+      }))
+    .then(()=>{
+      const payerNames = payersList.map(p=>state.members[p.memberId]?.name||'').join(', ');
+      writeLog(`เพิ่มค่าใช้จ่าย "${desc}" ${fmt(totalAmount)} ກີບ (ออกเงินโดย ${payerNames})`);
+      toast('บันทึกรายการแล้ว');
+      closeSheet('expOverlay');
+    })
+    .catch(()=>toast('เกิดข้อผิดพลาด ลองใหม่อีกครั้ง'))
+    .finally(()=>setLoading(btn, false, 'บันทึกรายการ'));
+});
+
+/* ================================================================
+   MARK AS PAID  (member-facing request)
+   ================================================================ */
+document.getElementById('payFab').addEventListener('click', ()=>{
+  const collectorId = state.settings.collectorMemberId;
+  const collector = state.members[collectorId];
+  if(!collectorId || !collector){ toast('แอดมินยังไม่ได้ตั้งค่าຜູ້ດູແລກອງກາງ'); return; }
+  const members = membersArr().filter(m=>m.id !== collectorId);
+  if(members.length === 0){ toast('ยังไม่มีสมาชิกอื่นนอกจากຜູ້ດູແລກອງກາງ'); return; }
+  const fromSel = document.getElementById('payFromSelect');
+  fromSel.innerHTML = members.map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+  document.getElementById('payToDisplay').value = collector.name + ' (ຜູ້ດູແລກອງກາງ)';
+  document.getElementById('payAmountInput').value='';
+  document.getElementById('payErr').classList.remove('show');
+  openSheet('payOverlay');
+});
+
+document.getElementById('submitPayBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('submitPayBtn');
+  const errEl = document.getElementById('payErr');
+  const from = document.getElementById('payFromSelect').value;
+  const to = state.settings.collectorMemberId;
+  const amount = validAmount(document.getElementById('payAmountInput').value);
+
+  if(!amount || !to || from === to){
+    errEl.textContent = !amount ? 'ໃສ່ຈຳນວນເງິນທີ່ຖືກຕ້ອງ (ຫລາຍກວ່າ 0)' : 'ผู้โอนและผู้รับต้องไม่ใช่คนเดียวกัน';
+    errEl.classList.add('show');
+    return;
+  }
+  errEl.classList.remove('show');
+  setLoading(btn, true, 'ส่งคำขอแจ้งโอน');
+
+  db.ref('payments').push({
+    from, to, amountTransferred: amount, status: 'pending',
+    ts: firebase.database.ServerValue.TIMESTAMP
+  }).then(()=>{
+    writeLog(`${state.members[from]?.name} แจ้งโอนเงินเข้ากองกลาง (${state.members[to]?.name}) จำนวน ${fmt(amount)} ກີບ`);
+    toast('ส่งคำขอแล้ว รอแอดมินตรวจสอบ');
+    closeSheet('payOverlay');
+  }).catch(()=>toast('เกิดข้อผิดพลาด ลองใหม่อีกครั้ง'))
+    .finally(()=>setLoading(btn, false, 'ส่งคำขอแจ้งโอน'));
+});
+
+/* ================================================================
+   ADMIN: APPROVE / PARTIAL / REJECT   (all via runTransaction)
+   ================================================================ */
+let activePaymentId = null;
+
+function approvePayment(id, mode, customAmount){
+  const p = state.payments[id];
+  if(!p || p.status !== 'pending') return;
+  const resolvedAmount = mode === 'full' ? p.amountTransferred : customAmount;
+  if(!resolvedAmount || resolvedAmount <= 0){ toast('จำนวนเงินไม่ถูกต้อง'); return; }
+
+  const fromRef = db.ref('members/'+p.from+'/balance');
+  const toRef = db.ref('members/'+p.to+'/balance');
+
+  Promise.all([
+    fromRef.transaction(cur => Math.round((cur||0) + resolvedAmount)),
+    toRef.transaction(cur => Math.round((cur||0) - resolvedAmount))
+  ]).then(()=>{
+    const status = (resolvedAmount < p.amountTransferred) ? 'partial' : 'approved';
+    return db.ref('payments/'+id).update({ status, resolvedAmount });
+  }).then(()=>{
+    const fromName = state.members[p.from]?.name || '—';
+    const toName = state.members[p.to]?.name || '—';
+    writeLog(`ອະນຸມັດ ${fromName} → ${toName} ຈຳນວນ ${fmt(resolvedAmount)} ກີບ (${mode==='full'?'ເຕັມຈຳນວນ':'ບ່ອນສັບ/ກຳນົດຕົວ'})`);
+    toast('ອະນຸມັດແລ້ວ');
+  }).catch(()=>toast('ເກີດຂໍ້ຜິດພາດ ລອງໃໝ່ອີກຄັ້ງ'));
+}
+
+function openPartialModal(id){
+  activePaymentId = id;
+  const p = state.payments[id];
+  document.getElementById('partialAmountInput').value = p ? p.amountTransferred : '';
+  openSheet('partialOverlay');
+}
+document.getElementById('confirmPartialBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('confirmPartialBtn');
+  const amount = validAmount(document.getElementById('partialAmountInput').value);
+  if(!amount){ toast('ໃສ່ຈຳນວນເງິນທີ່ຖືກຕ້ອງ (ຫລາຍກວ່າ 0)'); return; }
+  setLoading(btn, true, 'ยืนยันอนุมัติ');
+  approvePayment(activePaymentId, 'partial', amount);
+  setTimeout(()=>{ setLoading(btn, false, 'ยืนยันอนุมัติ'); closeSheet('partialOverlay'); }, 400);
+});
+
+function openRejectModal(id){
+  activePaymentId = id;
+  document.getElementById('rejectReasonInput').value='';
+  openSheet('rejectOverlay');
+}
+document.getElementById('confirmRejectBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('confirmRejectBtn');
+  const reason = document.getElementById('rejectReasonInput').value.trim() || 'ไม่ระบุเหตุผล';
+  setLoading(btn, true, 'ยืนยันปฏิเสธ');
+  const p = state.payments[activePaymentId];
+  db.ref('payments/'+activePaymentId).update({ status:'rejected', rejectReason: reason })
+    .then(()=>{
+      writeLog(`ปฏิเสธคำขอโอนของ ${state.members[p.from]?.name||''} — เหตุผล: ${reason}`);
+      toast('ปฏิเสธคำขอแล้ว');
+      closeSheet('rejectOverlay');
+    })
+    .catch(()=>toast('เกิดข้อผิดพลาด'))
+    .finally(()=>setLoading(btn, false, 'ยืนยันปฏิเสธ'));
+});
+
+/* ================================================================
+   ADMIN: SAVE COLLECTOR (ຜູ້ດູແລກອງກາງ)  (must be a member)
+   ================================================================ */
+document.getElementById('saveCollectorBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('saveCollectorBtn');
+  const id = document.getElementById('collectorSelect').value;
+  if(!id){ toast('กรุณาเพิ่มสมาชิกก่อน'); return; }
+  setLoading(btn, true, 'บันทึกຜູ້ດູແລກອງກາງ');
+  db.ref('settings/collectorMemberId').set(id)
+    .then(()=>{ writeLog(`ตั้ง "${state.members[id]?.name}" เป็นຜູ້ດູແລກອງກາງ`); toast('บันทึกแล้ว'); })
+    .catch(()=>toast('เกิดข้อผิดพลาด'))
+    .finally(()=>setLoading(btn, false, 'บันทึกຜູ້ດູແລກອງກາງ'));
+});
+
+/* ================================================================
+   ADMIN: SAVE QR URL
+   ================================================================ */
+document.getElementById('saveQrBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('saveQrBtn');
+  const url = document.getElementById('qrUrlInput').value.trim();
+  setLoading(btn, true, 'บันทึกลิงก์ QR');
+  db.ref('settings/qrImageUrl').set(url)
+    .then(()=>{ writeLog('อัปเดตลิงก์รูป QR BCEL One'); toast('บันทึกแล้ว'); })
+    .catch(()=>toast('เกิดข้อผิดพลาด'))
+    .finally(()=>setLoading(btn, false, 'บันทึกลิงก์ QR'));
+});
+ 
+
+/* ================================================================
+   DOWNLOAD QR CODE LOGIC
+   ================================================================ */
+document.getElementById('downloadQrBtn').addEventListener('click', async () => {
+  const url = state.settings.qrImageUrl;
+  if(!url) return;
+
+  try {
+    // โหลดไฟล์เป็น Blob เพื่อบังคับดาวน์โหลดผ่านเบราว์เซอร์มือถือ/เดสก์ท็อป
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = 'BCEL_One_QR.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+    toast('ດາວໂຫລດ QR ແລ້ວ');
+  } catch (err) {
+    // Fallback: เปิดรูปในแท็บใหม่กรณีที่ภาพติด CORS Header
+    window.open(url, '_blank');
+  }
+});
+
+renderAll();
+</script>
+</body>
+</html>
