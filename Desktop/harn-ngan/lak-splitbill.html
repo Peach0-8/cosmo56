@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>ໃບບິນຄ່າທ້ອມ (LAK)</title>
 
-<!-- Fonts: Kanit (display), Sarabun (body/Thai-Lao text), IBM Plex Mono (ledger figures) -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@600;700;800&family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Phetsarath&family=Kanit:wght@600;700;800&family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <!-- Firebase (compat SDK — simplest for CDN + runTransaction) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -28,18 +28,18 @@
 :root{
   --ink:#211826; --paper:#9d9c99; --navy:#142C46; --navy2:#1F4368;
   --gold:#1e761c; --coral:#B85138; --line:#afadaf; --paper-card:#d6d5d0b8;
-  --ok:#3F7D5C; --radius:50px;
+  --ok:#3F7D5C; --radius:35px;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;}
 body{
   background:var(--paper);
   color:var(--ink);
-  font-family:'Sarabun',sans-serif;
+  font-family:'Phetsarath','Sarabun',sans-serif;
   min-height:100vh;
   padding-bottom:96px;
 }
-h1,h2,h3,.display{font-family:'Kanit',sans-serif; letter-spacing:.2px;}
+h1,h2,h3,.display{font-family:'Phetsarath','Kanit',sans-serif; letter-spacing:.2px;}
 .mono{font-family:'IBM Plex Mono',monospace;}
 button{font-family:inherit; cursor:pointer;}
 button:disabled{opacity:.5; cursor:not-allowed;}
@@ -151,7 +151,7 @@ button:disabled{opacity:.5; cursor:not-allowed;}
 .field label{display:block; font-size:12.5px; font-weight:600; color:#54503f; margin-bottom:5px;}
 .field input, .field select, .field textarea{
   width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--line);
-  font-size:14.5px; font-family:'Sarabun',sans-serif; background:#fff;
+  font-size:14.5px; font-family:'Phetsarath','Sarabun',sans-serif; background:#fff;
 }
 .field input.mono{font-family:'IBM Plex Mono',monospace;}
 .payer-row{display:flex; gap:7px; align-items:center; margin-bottom:8px;}
