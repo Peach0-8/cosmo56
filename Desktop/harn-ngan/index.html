@@ -287,7 +287,7 @@ button:disabled{opacity:.5; cursor:not-allowed;}
   <div class="card" style="padding:6px 16px;" id="memberMgmtList"></div>
   <div class="card">
     <div class="field" style="margin-bottom:8px;">
-      <input type="text" id="newMemberName" placeholder="ชื่อสมาชิกใหม่">
+      <input type="text" id="newMemberName" placeholder="ຊື່ສະມາຊິກໃໝ່">
     </div>
     <button class="primary-btn" id="addMemberBtn"><span>+ ເພີ່ມສະມາຊິກ</span></button>
   </div>
@@ -540,8 +540,8 @@ function renderHero(){
   const exps = Object.values(state.expenses);
   const total = exps.reduce((s,e)=>s+(e.amount||0),0);
   document.getElementById('totalExpense').textContent = fmt(total);
-  document.getElementById('memberCountLabel').textContent = `สมาชิก ${membersArr().length} คน`;
-  document.getElementById('expenseCountLabel').textContent = `รายการ ${exps.length} รายการ`;
+  document.getElementById('memberCountLabel').textContent = `ສະມາຊິກ ${membersArr().length} คน`;
+  document.getElementById('expenseCountLabel').textContent = `ລາຍການ ${exps.length} ລາຍການ`;
 }
 
 function renderBalances(){
@@ -550,7 +550,7 @@ function renderBalances(){
   const collectorId = state.settings.collectorMemberId;
   document.getElementById('balanceCount').textContent = members.length + ' คน';
   if(members.length === 0){
-    list.innerHTML = '<div class="empty">ยังไม่มีสมาชิกในระบบ — ให้แอดมินเพิ่มสมาชิกก่อน</div>';
+    list.innerHTML = '<div class="empty">ຍັງບໍ່ມີສະມາຊິກ — ໃຫ້ແອັດມິນເພີ່ມສະມາຊິກກ່ອນ</div>';
     return;
   }
   list.innerHTML = members
@@ -559,7 +559,7 @@ function renderBalances(){
       const bal = Math.round(m.balance||0);
       const cls = bal >= 0 ? 'pos' : 'neg';
       const isCollector = m.id === collectorId;
-      const tagText = isCollector ? 'ຜູ້ດູແລກອງກາງ' : (bal >= 0 ? 'รอรับเงิน' : 'ต้องจ่าย');
+      const tagText = isCollector ? 'ຜູ້ດູແລກອງກາງ' : (bal >= 0 ? 'ຖ້າຮັບເງຶນ' : 'ຕ້ອງຈ່າຍ');
       const showRefundBtn = state.isAdmin && !isCollector && bal > 0 && collectorId;
       return `<div class="balance-row" style="padding:10px 0; border-bottom:1px solid var(--line);">
         <span class="name">${escapeHtml(m.name)}</span>
@@ -680,7 +680,7 @@ function renderExpenses(){
 function renderMemberMgmt(){
   const list = document.getElementById('memberMgmtList');
   const members = membersArr();
-  if(members.length===0){ list.innerHTML='<div class="empty">ยังไม่มีสมาชิก</div>'; return; }
+  if(members.length===0){ list.innerHTML='<div class="empty">ຍິງບໍ່ມີສະມາຊິກ</div>'; return; }
   list.innerHTML = members.map(m=>`
     <div class="member-pill">
       <span>${escapeHtml(m.name)} <span class="mono" style="color:#7a7460; font-size:12px;">(${fmt(m.balance||0)})</span></span>
@@ -730,7 +730,7 @@ function renderLogs(logs){
     const d = l.ts ? new Date(l.ts).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}) : '';
     return `<div style="padding:8px 0; border-bottom:1px solid var(--line); font-size:12.5px;">
       <div>${escapeHtml(l.message)}</div>
-      <div style="color:#a09a80; font-size:11px; margin-top:2px;">${d} · ${l.role==='admin'?'แอดมิน':'สมาชิก'}</div>
+      <div style="color:#a09a80; font-size:11px; margin-top:2px;">${d} · ${l.role==='admin'?'ແອັດມິນ':'ສະມາຊິກ'}</div>
     </div>`;
   }).join('');
 }
@@ -797,37 +797,37 @@ document.getElementById('addMemberBtn').addEventListener('click', ()=>{
   const btn = document.getElementById('addMemberBtn');
   const input = document.getElementById('newMemberName');
   const name = input.value.trim();
-  if(!name){ toast('กรุณากรอกชื่อสมาชิก'); return; }
-  setLoading(btn, true, '+ เพิ่มสมาชิก');
+  if(!name){ toast('ກະລຸນາໃສ່ຊື່ສະມາຊິກໃໝ່'); return; }
+  setLoading(btn, true, '+ ເພີ່ມສະມາຊິກ');
   const ref = db.ref('members').push();
   ref.set({ name, balance: 0 })
-    .then(()=>{ writeLog(`เพิ่มสมาชิกใหม่: ${name}`); input.value=''; toast('เพิ่มสมาชิกแล้ว'); })
-    .catch(()=>toast('เกิดข้อผิดพลาด ลองใหม่อีกครั้ง'))
-    .finally(()=>setLoading(btn, false, '+ เพิ่มสมาชิก'));
+    .then(()=>{ writeLog(`ເພີ່ມສະມາຊິກໃໝ່: ${name}`); input.value=''; toast('ເພີ່ມສະມາຊິກແລ້ວ'); })
+    .catch(()=>toast('ເກີດຂໍ້ຜິດພາດ ລອງອີກຄັ້ງ'))
+    .finally(()=>setLoading(btn, false, '+ ເພີ່ມສະມາຊິກ'));
 });
 
 function deleteMember(id){
   const m = state.members[id];
   if(!m) return;
   if(id === state.settings.collectorMemberId){
-    toast('ลบไม่ได้: คนนี้ถูกตั้งเป็นຜູ້ດູແລກອງກາງอยู่ กรุณาเปลี่ยนຜູ້ດູແລກອງກາງก่อน');
+    toast('ລົບບໍ່ໄດ້: ຄົນນີ້ຖືກຕັ້ງເປິນຜູ້ດູແລກອງກາງຢູ່ ກະລຸນາປ່ຽນຜູ້ດູແລກອງກາງກ່ອນ');
     return;
   }
   if(Math.round(m.balance||0) !== 0){
-    toast('ลบไม่ได้: สมาชิกยังมียอดค้างอยู่ กรุณาเคลียร์ยอดก่อน');
+    toast('ລົບບໍ່ໄດ້: ສະມາຊິກຍັງມີຍອດຄ້າງຢູ່ ກະລຸນາເຄຍຍອດກ່ອນ');
     return;
   }
-  if(!confirm(`ลบสมาชิก "${m.name}" ใช่หรือไม่?`)) return;
+  if(!confirm(`ລົບສະມາຊິກ: ${escapeHtml(m.name)}"${m.name}" ใช่หรือไม่?`)) return;
   db.ref('members/'+id).remove()
-    .then(()=>{ writeLog(`ลบสมาชิก: ${m.name}`); toast('ลบสมาชิกแล้ว'); })
-    .catch(()=>toast('เกิดข้อผิดพลาด'));
+    .then(()=>{ writeLog(`ລົບສະມາຊິກ: ${m.name}`); toast('ລົບສະມາຊິກແລ້ວ'); })
+    .catch(()=>toast('ເກີດຂໍ້ຜິດພາດ ລອງອີກຄັ້ງ'));
 }
 
 /* ================================================================
    ADD EXPENSE  (with runTransaction on every affected member balance)
    ================================================================ */
 document.getElementById('addExpFab').addEventListener('click', ()=>{
-  if(membersArr().length === 0){ toast('กรุณาให้แอดมินเพิ่มสมาชิกก่อน'); return; }
+  if(membersArr().length === 0){ toast('ກະລຸນາໃຫ້ແອັດມິນເພີ່ມສະມາຊິກກ່ອນ'); return; }
   populateExpenseModal();
   document.getElementById('expErr').classList.remove('show');
   openSheet('expOverlay');
@@ -943,9 +943,9 @@ document.getElementById('submitExpBtn').addEventListener('click', ()=>{
 document.getElementById('payFab').addEventListener('click', ()=>{
   const collectorId = state.settings.collectorMemberId;
   const collector = state.members[collectorId];
-  if(!collectorId || !collector){ toast('แอดมินยังไม่ได้ตั้งค่าຜູ້ດູແລກອງກາງ'); return; }
+  if(!collectorId || !collector){ toast('ແອັດມິນຍັງບໍ່ໄດ້ຕັ້ງຜູ້ດູແລກອງກາງ'); return; }
   const members = membersArr().filter(m=>m.id !== collectorId);
-  if(members.length === 0){ toast('ยังไม่มีสมาชิกอื่นนอกจากຜູ້ດູແລກອງກາງ'); return; }
+  if(members.length === 0){ toast('ຍັງບໍ່ມີສະມາຊິກອື່ນນອກຈາກຜູ້ດູແລກອງກາງ'); return; }
   const fromSel = document.getElementById('payFromSelect');
   fromSel.innerHTML = members.map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
   document.getElementById('payToDisplay').value = collector.name + ' (ຜູ້ດູແລກອງກາງ)';
@@ -1049,12 +1049,12 @@ document.getElementById('confirmRejectBtn').addEventListener('click', ()=>{
 document.getElementById('saveCollectorBtn').addEventListener('click', ()=>{
   const btn = document.getElementById('saveCollectorBtn');
   const id = document.getElementById('collectorSelect').value;
-  if(!id){ toast('กรุณาเพิ่มสมาชิกก่อน'); return; }
-  setLoading(btn, true, 'บันทึกຜູ້ດູແລກອງກາງ');
+  if(!id){ toast('ກະລຸນາໃຫ້ເພີ່ມສະມາຊິກກ່ອນ'); return; }
+  setLoading(btn, true, 'ບັນທຶກຜູ້ດູແລກອງກາງ');
   db.ref('settings/collectorMemberId').set(id)
-    .then(()=>{ writeLog(`ตั้ง "${state.members[id]?.name}" เป็นຜູ້ດູແລກອງກາງ`); toast('บันทึกแล้ว'); })
-    .catch(()=>toast('เกิดข้อผิดพลาด'))
-    .finally(()=>setLoading(btn, false, 'บันทึกຜູ້ດູແລກອງກາງ'));
+    .then(()=>{ writeLog(`ຕັ້ງ "${state.members[id]?.name}" ເປັນຜູ້ດູແລກອງກາງ`); toast('ບັນທຶກແລ້ວ'); })
+    .catch(()=>toast('ເກີດຂໍ້ຜິດພາດ'))
+    .finally(()=>setLoading(btn, false, 'ບັນທຶກຜູ້ດູແລກອງກາງ'));
 });
 
 /* ================================================================
@@ -1063,11 +1063,11 @@ document.getElementById('saveCollectorBtn').addEventListener('click', ()=>{
 document.getElementById('saveQrBtn').addEventListener('click', ()=>{
   const btn = document.getElementById('saveQrBtn');
   const url = document.getElementById('qrUrlInput').value.trim();
-  setLoading(btn, true, 'บันทึกลิงก์ QR');
+  setLoading(btn, true, 'ບັນທຶກລິ້ງ QR');
   db.ref('settings/qrImageUrl').set(url)
-    .then(()=>{ writeLog('อัปเดตลิงก์รูป QR BCEL One'); toast('บันทึกแล้ว'); })
-    .catch(()=>toast('เกิดข้อผิดพลาด'))
-    .finally(()=>setLoading(btn, false, 'บันทึกลิงก์ QR'));
+    .then(()=>{ writeLog('ອັບເດດລິ້ງຮູບ QR BCEL One'); toast('ບັນທຶກແລ້ວ'); })
+    .catch(()=>toast('ເກີດຂໍ້ຜິດພາດ'))
+    .finally(()=>setLoading(btn, false, 'ບັນທຶກລິ້ງ QR'));
 });
  
 
@@ -1086,7 +1086,7 @@ document.getElementById('downloadQrBtn').addEventListener('click', async () => {
     
     const a = document.createElement('a');
     a.href = blobUrl;
-    a.download = 'BCEL_One_QR.png';
+    a.download = 'BCEL_One_QR.jpg';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
