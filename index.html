@@ -68,6 +68,14 @@ button:disabled{opacity:.5; cursor:not-allowed;}
   padding:20px 50px 16px;
 }
 
+/*
+.ticket::before, .ticket::after{
+  content:""; position:absolute; left:0; right:0; height:10px;
+  background-image:radial-gradient(circle at 6px 5px, var(--paper) 5px, transparent 5.5px);
+  background-size:14px 10px; background-repeat:repeat-x;
+}
+*/
+
 .ticket::before{ top:-1px; }
 .ticket::after{ bottom:-1px; transform:scaleY(-1); }
 .ticket .eyebrow{
@@ -87,7 +95,7 @@ button:disabled{opacity:.5; cursor:not-allowed;}
 .section{padding:0 16px; margin-bottom:20px;}
 .section-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
 .section-head h2{font-size:15px; margin:0; font-weight:700; color:var(--navy);}
-.section-head .count{font-size:11.5px; color:#7a7460; font-weight:600;}
+.section-head .count{font-size:11.5px; color:#4a473d; font-weight:600;}
 
 /* ---------- Cards ---------- */
 .card{
@@ -116,15 +124,28 @@ button:disabled{opacity:.5; cursor:not-allowed;}
 .expense-row{display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--line);}
 .expense-row:last-child{border-bottom:none;}
 .expense-row .desc{font-weight:600; font-size:13.5px;}
-.expense-row .meta{font-size:11.5px; color:#7a7460; margin-top:2px;}
+.expense-row .meta{font-size:11.5px; color:#4a473d; margin-top:2px;}
 .expense-row .amt{font-weight:700; font-size:14px;}
 
 .empty{text-align:center; padding:28px 10px; color:#8b8570; font-size:13px;}
 
+/* ---------- Category breakdown chart ---------- */
+.cat-bar-row{margin-bottom:12px;}
+.cat-bar-row:last-child{margin-bottom:0;}
+.cat-bar-label{display:flex; justify-content:space-between; font-size:12.5px; font-weight:600; margin-bottom:5px;}
+.cat-bar-track{background:#e7e3d4; border-radius:999px; height:10px; overflow:hidden;}
+.cat-bar-fill{height:100%; border-radius:999px; background:var(--navy);}
+
+/* ---------- Expense row admin actions ---------- */
+.exp-actions{display:flex; gap:6px; margin-top:6px;}
+.exp-actions button{border:none; border-radius:7px; padding:5px 10px; font-size:11px; font-weight:700;}
+.exp-edit-btn{background:var(--navy2); color:#fff;}
+.exp-del-btn{background:var(--coral); color:#fff;}
+
 /* ---------- QR card ---------- */
 .qr-card{display:flex; flex-direction:column; align-items:center; gap:10px; padding:18px 16px;}
 .qr-card img{width:180px; height:180px; object-fit:contain; border-radius:8px; background:#fff; border:1px solid var(--line);}
-.qr-card .cap{font-size:12px; color:#7a7460; text-align:center;}
+.qr-card .cap{font-size:12px; color:#4a473d; text-align:center;}
 
 /* ---------- FAB ---------- */
 .fab{
@@ -191,12 +212,14 @@ button:disabled{opacity:.5; cursor:not-allowed;}
 .status-pill.approved{background:#e4f1ea; color:var(--ok);}
 .status-pill.partial{background:#eee1d2; color:#96602c;}
 .status-pill.rejected{background:#f4e6e0; color:var(--coral);}
-.req-card .num{font-size:12px; color:#7a7460; margin-bottom:10px;}
+.req-card .num{font-size:12px; color:#4a473d; margin-bottom:10px;}
 .req-actions{display:flex; gap:8px;}
 .req-actions button{flex:1; border:none; border-radius:9px; padding:9px 6px; font-size:12px; font-weight:700;}
 .act-full{background:var(--ok); color:#fff;}
 .act-partial{background:var(--gold); color:#20180a;}
 .act-reject{background:var(--coral); color:#fff;}
+
+.cancel-req-btn{background:transparent; border:1px solid var(--coral); color:var(--coral); border-radius:8px; padding:6px 12px; font-size:11.5px; font-weight:700; margin-top:8px;}
 
 .member-pill{
   display:flex; align-items:center; justify-content:space-between; padding:10px 4px;
@@ -263,6 +286,12 @@ button:disabled{opacity:.5; cursor:not-allowed;}
   <div id="settleOutList" class="card" style="padding:4px 16px;"></div>
 </div>
 
+<!-- ============ PUBLIC: PAYMENT REQUEST STATUS ============ -->
+<div class="section">
+  <div class="section-head"><h2>ສະຖານະຄຳຂໍແຈ້ງໂອນ</h2><span class="count" id="publicReqCount"></span></div>
+  <div id="publicRequestList" class="card" style="padding:4px 16px;"></div>
+</div>
+
 <!-- ============ QR ============ -->
 <div class="section">
   <div class="section-head"><h2>QR CODE (BCEL One)</h2></div>
@@ -274,11 +303,30 @@ button:disabled{opacity:.5; cursor:not-allowed;}
   </div>
 </div>
 
+<!-- ============ INVITE / SHARE ============ -->
+<div class="section">
+  <div class="section-head"><h2>ຊວນເພື່ອນເຂົ້າກຸ່ມ</h2></div>
+  <div class="card qr-card">
+    <img id="inviteQrImg" src="" alt="Invite QR" style="width:150px; height:150px; object-fit:contain; border-radius:8px; background:#fff; border:1px solid var(--line);">
+    <div class="cap">ໃຫ້ໝູ່ສະແກນ QR ນີ້ ຫລື ກົດປຸ່ມຄັດລອກລິ້ງເພື່ອສົ່ງໃຫ້ໝູ່</div>
+    <button type="button" class="pay-btn" id="copyLinkBtn" style="background:var(--navy2);">🔗 ຄັດລອກລິ້ງ</button>
+  </div>
+</div>
+
 
 <!-- ============ EXPENSE HISTORY ============ -->
 <div class="section">
   <div class="section-head"><h2>ປະຫວັດລາຍການ</h2><span class="count" id="expListCount"></span></div>
+  <div class="field" style="margin-bottom:8px;">
+    <input type="text" id="expenseSearchInput" placeholder="🔍 ຄົ້ນຫາຕາມລາຍລະອຽດ ຫລື ຊື່ຄົນ">
+  </div>
   <div id="expenseList" class="card" style="padding:4px 16px;"></div>
+</div>
+
+<!-- ============ CATEGORY BREAKDOWN CHART ============ -->
+<div class="section">
+  <div class="section-head"><h2>ສະຫລຸບຕາມໝວດໝູ່</h2></div>
+  <div id="categoryChart" class="card" style="padding:14px 16px;"></div>
 </div>
 
 <!-- ============ ADMIN: MEMBERS ============ -->
@@ -308,7 +356,7 @@ button:disabled{opacity:.5; cursor:not-allowed;}
       <select id="collectorSelect"></select>
     </div>
     <button class="primary-btn" id="saveCollectorBtn"><span>ບັນທຶກຜູ້ດູແລ</span></button>
-    <p style="font-size:11.5px; color:#7a7460; margin:10px 0 0;">ทุกคน (ยกเว้นคนนี้) จะโอนเงินเข้าหาคนนี้ก่อน แล้วคนนี้จะเป็นคนโอนคืนให้คนที่สำรองจ่ายเกินส่วนของตัวเอง</p>
+    <p style="font-size:11.5px; color:#4a473d; margin:10px 0 0;">ทุกคน (ยกเว้นคนนี้) จะโอนเงินเข้าหาคนนี้ก่อน แล้วคนนี้จะเป็นคนโอนคืนให้คนที่สำรองจ่ายเกินส่วนของตัวเอง</p>
   </div>
   <div class="card">
     <div class="field">
@@ -316,6 +364,20 @@ button:disabled{opacity:.5; cursor:not-allowed;}
       <input type="text" id="qrUrlInput" placeholder="https://...">
     </div>
     <button class="primary-btn" id="saveQrBtn"><span>บันทึกลิงก์ QR</span></button>
+  </div>
+  <div class="card">
+    <div class="field" style="margin-bottom:8px;">
+      <label>ແຈ້ງເຕືອນ (Browser Notification)</label>
+      <p style="font-size:11.5px; color:#4a473d; margin:0 0 8px;">ເປີດແລ້ວ ຈະມີການແຈ້ງເຕືອນເມື່ອມີຄຳຂໍແຈ້ງໂອນໃໝ່ເຂົ້າມາ (ຕ້ອງເປີດແທັບນີ້ຄ້າງໄວ້)</p>
+      <button type="button" class="pay-btn" id="enableNotifBtn" style="background:var(--navy2);">🔔 ເປີດການແຈ້ງເຕືອນ</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="field" style="margin-bottom:8px;">
+      <label>ສົ່ງອອກຂໍ້ມູນ</label>
+      <p style="font-size:11.5px; color:#4a473d; margin:0 0 8px;">ດາວໂຫລດລາຍການຄ່າໃຊ້ຈ່າຍ ແລະ ຍອດຄົງເຫລືອທັງໝົດເປັນ CSV (ເປີດດ້ວຍ Excel ໄດ້)</p>
+      <button type="button" class="pay-btn" id="exportCsvBtn" style="background:var(--ok);">📊 ດາວໂຫລດ CSV</button>
+    </div>
   </div>
 </div>
 
@@ -334,7 +396,7 @@ button:disabled{opacity:.5; cursor:not-allowed;}
   <div class="sheet" style="position:relative;">
     <button class="close" data-close="payOverlay">✕</button>
     <h3>แจ้งโอนเงิน</h3>
-    <p style="font-size:12.5px; color:#7a7460; margin-top:0;"> </p>
+    <p style="font-size:12.5px; color:#4a473d; margin-top:0;"> </p>
     <div class="field">
       <label>ຂ້ອຍແມ່ນໃຜ</label>
       <select id="payFromSelect"></select>
@@ -356,10 +418,21 @@ button:disabled{opacity:.5; cursor:not-allowed;}
 <div class="overlay" id="expOverlay">
   <div class="sheet" style="position:relative;">
     <button class="close" data-close="expOverlay">✕</button>
-    <h3>ເພີ່ມລາຍການຄ່າໃຊ້ຈ່າຍ</h3>
+    <h3 id="expModalTitle">ເພີ່ມລາຍການຄ່າໃຊ້ຈ່າຍ</h3>
     <div class="field">
       <label>ລາຍລະອຽດ</label>
       <input type="text" id="expDescInput" placeholder=" ເຊັ່ນ ກະທ້ອມ ">
+    </div>
+
+    <div class="field">
+      <label>ໝວດໝູ່</label>
+      <select id="expCategorySelect">
+        <option value="food">🍽 ອາຫານ</option>
+        <option value="travel">🚗 ເດີນທາງ</option>
+        <option value="shopping">🛒 ຂອງໃຊ້</option>
+        <option value="event">🎉 ກິດຈະກຳ</option>
+        <option value="other" selected>📦 ອື່ນໆ</option>
+      </select>
     </div>
 
     <div class="field">
@@ -469,6 +542,9 @@ let state = {
   settings: {},
   isAdmin: false
 };
+let editingExpenseId = null;   // set while the expense modal is in "edit" mode
+let knownPaymentIds = null;    // null until first payments snapshot, then a Set of seen ids (for notifications)
+let notifPermission = (typeof Notification !== 'undefined') ? Notification.permission : 'unsupported';
 
 /* ---------------- helpers ---------------- */
 function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
@@ -500,9 +576,60 @@ function validAmount(v){
 /* ---------------- realtime listeners ---------------- */
 db.ref('members').on('value', snap=>{ state.members = snap.val() || {}; renderAll(); });
 db.ref('expenses').on('value', snap=>{ state.expenses = snap.val() || {}; renderAll(); });
-db.ref('payments').on('value', snap=>{ state.payments = snap.val() || {}; renderAll(); });
+db.ref('payments').on('value', snap=>{
+  const newPayments = snap.val() || {};
+  checkForNewPendingRequests(newPayments);
+  state.payments = newPayments;
+  renderAll();
+});
 db.ref('settings').on('value', snap=>{ state.settings = snap.val() || {}; renderAll(); });
 db.ref('logs').limitToLast(60).on('value', snap=>{ renderLogs(snap.val() || {}); });
+
+/* Fire a browser notification when a brand-new pending payment request shows up. */
+function checkForNewPendingRequests(newPayments){
+  const currentIds = new Set(Object.keys(newPayments));
+  if(knownPaymentIds === null){ knownPaymentIds = currentIds; return; } // first load: nothing to notify about
+  Object.entries(newPayments).forEach(([id, p])=>{
+    if(!knownPaymentIds.has(id) && p.status === 'pending' && notifPermission === 'granted'){
+      const fromName = state.members[p.from]?.name || 'ສະມາຊິກ';
+      try{
+        new Notification('ມີຄຳຂໍແຈ້ງໂອນເງິນໃໝ່', {
+          body: `${fromName} ແຈ້ງໂອນ ${fmt(p.amountTransferred)} ກີບ`,
+          tag: id
+        });
+      }catch(e){ /* Notification constructor can throw on some mobile browsers — ignore */ }
+    }
+  });
+  knownPaymentIds = currentIds;
+}
+
+/* ================================================================
+   INVITE / SHARE
+   ================================================================ */
+document.getElementById('inviteQrImg').src =
+  'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(window.location.href);
+
+document.getElementById('copyLinkBtn').addEventListener('click', async ()=>{
+  const url = window.location.href;
+  try{
+    await navigator.clipboard.writeText(url);
+    toast('ຄັດລອກລິ້ງແລ້ວ 🔗');
+  }catch(e){
+    // clipboard API unavailable/blocked — fall back to a manual prompt
+    prompt('ຄັດລອກລິ້ງນີ້ດ້ວຍມື:', url);
+  }
+});
+
+/* ================================================================
+   NOTIFICATIONS (admin: new pending payment requests)
+   ================================================================ */
+document.getElementById('enableNotifBtn').addEventListener('click', async ()=>{
+  if(typeof Notification === 'undefined'){ toast('ບຣາວເຊີນີ້ບໍ່ຮອງຮັບການແຈ້ງເຕືອນ'); return; }
+  const perm = await Notification.requestPermission();
+  notifPermission = perm;
+  if(perm === 'granted') toast('ເປີດການແຈ້ງເຕືອນແລ້ວ ✅');
+  else toast('ບໍ່ໄດ້ຮັບອະນຸຍາດການແຈ້ງເຕືອນ');
+});
 
 /* ---------------- audit log ---------------- */
 function writeLog(message){
@@ -522,6 +649,8 @@ function renderAll(){
   renderSettlement();
   renderQr();
   renderExpenses();
+  renderCategoryChart();
+  renderPublicRequests();
   if(state.isAdmin){
     renderMemberMgmt();
     renderRequests();
@@ -657,9 +786,19 @@ function renderQr(){
 
 function renderExpenses(){
   const list = document.getElementById('expenseList');
-  const exps = Object.entries(state.expenses).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
+  const searchTerm = (document.getElementById('expenseSearchInput').value || '').trim().toLowerCase();
+  let exps = Object.entries(state.expenses).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
+
+  if(searchTerm){
+    exps = exps.filter(([id,e])=>{
+      const payers = e.payers || (e.paidBy ? [{memberId:e.paidBy}] : []);
+      const payerNames = payers.map(p=>state.members[p.memberId]?.name || '').join(' ').toLowerCase();
+      return (e.description||'').toLowerCase().includes(searchTerm) || payerNames.includes(searchTerm);
+    });
+  }
+
   document.getElementById('expListCount').textContent = exps.length + ' รายการ';
-  if(exps.length === 0){ list.innerHTML = '<div class="empty">ยังไม่มีรายการค่าใช้จ่าย</div>'; return; }
+  if(exps.length === 0){ list.innerHTML = '<div class="empty">ไม่พบรายการค่าใช้จ่าย</div>'; return; }
   list.innerHTML = exps.map(([id,e])=>{
     const payers = e.payers || (e.paidBy ? [{memberId:e.paidBy, amount:e.amount}] : []); // back-compat
     const payerText = payers.map(p=>{
@@ -667,15 +806,26 @@ function renderExpenses(){
       return `${escapeHtml(nm)} (${fmt(p.amount)}${p.note ? ' · '+escapeHtml(p.note) : ''})`;
     }).join(', ');
     const splitCount = (e.splitAmong||[]).length;
+    const catLabel = CATEGORY_LABELS[e.category] || '';
+    const actions = state.isAdmin ? `
+      <div class="exp-actions">
+        <button class="exp-edit-btn" data-edit-exp="${id}">✎ ແກ້ໄຂ</button>
+        <button class="exp-del-btn" data-del-exp="${id}">🗑 ລົບ</button>
+      </div>` : '';
     return `<div class="expense-row">
       <div>
-        <div class="desc">${escapeHtml(e.description||'-')}</div>
+        <div class="desc">${catLabel ? catLabel+' · ' : ''}${escapeHtml(e.description||'-')}</div>
         <div class="meta">ออกเงิน: ${payerText || '—'} · หาร ${splitCount} คน</div>
+        ${actions}
       </div>
       <div class="amt mono">${fmt(e.amount)}</div>
     </div>`;
   }).join('');
+
+  list.querySelectorAll('[data-edit-exp]').forEach(b=>b.addEventListener('click', ()=>openEditExpense(b.dataset.editExp)));
+  list.querySelectorAll('[data-del-exp]').forEach(b=>b.addEventListener('click', ()=>deleteExpense(b.dataset.delExp)));
 }
+document.getElementById('expenseSearchInput').addEventListener('input', renderExpenses);
 
 function renderMemberMgmt(){
   const list = document.getElementById('memberMgmtList');
@@ -683,7 +833,7 @@ function renderMemberMgmt(){
   if(members.length===0){ list.innerHTML='<div class="empty">ຍິງບໍ່ມີສະມາຊິກ</div>'; return; }
   list.innerHTML = members.map(m=>`
     <div class="member-pill">
-      <span>${escapeHtml(m.name)} <span class="mono" style="color:#7a7460; font-size:12px;">(${fmt(m.balance||0)})</span></span>
+      <span>${escapeHtml(m.name)} <span class="mono" style="color:#4a473d; font-size:12px;">(${fmt(m.balance||0)})</span></span>
       <button class="del-x" data-del-member="${m.id}">✕</button>
     </div>`).join('');
   list.querySelectorAll('[data-del-member]').forEach(btn=>{
@@ -706,7 +856,7 @@ function renderRequests(){
         <button class="act-full" data-full="${id}">✓ Full</button>
         <button class="act-partial" data-partial="${id}">± Partial</button>
         <button class="act-reject" data-reject="${id}">✕ Reject</button>
-      </div>` : (p.status==='rejected' && p.rejectReason ? `<div class="meta" style="font-size:11.5px; color:#7a7460;">เหตุผล: ${escapeHtml(p.rejectReason)}</div>` : '');
+      </div>` : (p.status==='rejected' && p.rejectReason ? `<div class="meta" style="font-size:11.5px; color:#4a473d;">เหตุผล: ${escapeHtml(p.rejectReason)}</div>` : '');
     return `<div class="card req-card">
       <div class="top">
         <span class="who">${escapeHtml(fromName)} → ${escapeHtml(toName)}</span>
@@ -720,6 +870,64 @@ function renderRequests(){
   list.querySelectorAll('[data-full]').forEach(b=>b.addEventListener('click', ()=>approvePayment(b.dataset.full, 'full')));
   list.querySelectorAll('[data-partial]').forEach(b=>b.addEventListener('click', ()=>openPartialModal(b.dataset.partial)));
   list.querySelectorAll('[data-reject]').forEach(b=>b.addEventListener('click', ()=>openRejectModal(b.dataset.reject)));
+}
+
+/* Public view of payment requests (no login system exists, so this is visible
+   to everyone — consistent with the "no security needed, friend group" model).
+   Anyone can cancel a request that is still pending, e.g. if they made a mistake. */
+function renderPublicRequests(){
+  const list = document.getElementById('publicRequestList');
+  const entries = Object.entries(state.payments).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0)).slice(0, 20);
+  const pendingCount = Object.values(state.payments).filter(p=>p.status==='pending').length;
+  document.getElementById('publicReqCount').textContent = pendingCount + ' ລໍຖ້າ';
+  if(entries.length===0){ list.innerHTML = '<div class="empty">ຍັງບໍ່ມີຄຳຂໍແຈ້ງໂອນ</div>'; return; }
+  list.innerHTML = entries.map(([id,p])=>{
+    const fromName = state.members[p.from]?.name || '—';
+    const toName = state.members[p.to]?.name || '—';
+    const pillText = {pending:'ລໍຖ້າກວດສອບ', approved:'ອະນຸມັດແລ້ວ', partial:'ອະນຸມັດບາງສ່ວນ', rejected:'ປະຕິເສດ'}[p.status] || p.status;
+    const cancelBtn = p.status==='pending' ? `<button class="cancel-req-btn" data-cancel="${id}">ຍົກເລີກຄຳຂໍນີ້</button>` : '';
+    return `<div style="padding:10px 0; border-bottom:1px solid var(--line);">
+      <div class="top" style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="who" style="font-size:13px; font-weight:600;">${escapeHtml(fromName)} → ${escapeHtml(toName)}</span>
+        <span class="status-pill ${p.status}">${pillText}</span>
+      </div>
+      <div class="num mono" style="font-size:11.5px; color:#4a473d;">${fmt(p.amountTransferred)} ກີບ</div>
+      ${cancelBtn}
+    </div>`;
+  }).join('');
+  list.querySelectorAll('[data-cancel]').forEach(b=>{
+    b.addEventListener('click', ()=>cancelRequest(b.dataset.cancel));
+  });
+}
+
+function cancelRequest(id){
+  const p = state.payments[id];
+  if(!p || p.status !== 'pending') return;
+  if(!confirm('ຍົກເລີກຄຳຂໍແຈ້ງໂອນນີ້ບໍ?')) return;
+  db.ref('payments/'+id).remove()
+    .then(()=>{ writeLog(`ຍົກເລີກຄຳຂໍແຈ້ງໂອນຂອງ ${state.members[p.from]?.name||''}`); toast('ຍົກເລີກແລ້ວ'); })
+    .catch(()=>toast('ເກີດຂໍ້ຜິດພາດ'));
+}
+
+/* Simple CSS-based horizontal bar chart summarizing spend by category. */
+const CATEGORY_LABELS = { food:'🍽 ອາຫານ', travel:'🚗 ເດີນທາງ', shopping:'🛒 ຂອງໃຊ້', event:'🎉 ກິດຈະກຳ', other:'📦 ອື່ນໆ' };
+function renderCategoryChart(){
+  const wrap = document.getElementById('categoryChart');
+  const totals = {};
+  Object.values(state.expenses).forEach(e=>{
+    const cat = e.category || 'other';
+    totals[cat] = (totals[cat]||0) + (e.amount||0);
+  });
+  const entries = Object.entries(totals).sort((a,b)=>b[1]-a[1]);
+  if(entries.length === 0){ wrap.innerHTML = '<div class="empty">ຍັງບໍ່ມີຂໍ້ມູນລາຍຈ່າຍ</div>'; return; }
+  const max = Math.max(...entries.map(([,v])=>v));
+  wrap.innerHTML = entries.map(([cat, val])=>{
+    const pct = max > 0 ? Math.round((val/max)*100) : 0;
+    return `<div class="cat-bar-row">
+      <div class="cat-bar-label"><span>${CATEGORY_LABELS[cat]||cat}</span><span class="mono">${fmt(val)} ກີບ</span></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;"></div></div>
+    </div>`;
+  }).join('');
 }
 
 function renderLogs(logs){
@@ -817,27 +1025,69 @@ function deleteMember(id){
     toast('ລົບບໍ່ໄດ້: ສະມາຊິກຍັງມີຍອດຄ້າງຢູ່ ກະລຸນາເຄຍຍອດກ່ອນ');
     return;
   }
-  if(!confirm(`ລົບສະມາຊິກ: ${escapeHtml(m.name)}"${m.name}" ใช่หรือไม่?`)) return;
+  if(!confirm(`ລົບສະມາຊິກ "${m.name}" ใช่หรือไม่?`)) return;
   db.ref('members/'+id).remove()
     .then(()=>{ writeLog(`ລົບສະມາຊິກ: ${m.name}`); toast('ລົບສະມາຊິກແລ້ວ'); })
     .catch(()=>toast('ເກີດຂໍ້ຜິດພາດ ລອງອີກຄັ້ງ'));
 }
 
 /* ================================================================
-   ADD EXPENSE  (with runTransaction on every affected member balance)
+   ADD / EDIT / DELETE EXPENSE  (with runTransaction on every affected balance)
    ================================================================ */
 document.getElementById('addExpFab').addEventListener('click', ()=>{
   if(membersArr().length === 0){ toast('ກະລຸນາໃຫ້ແອັດມິນເພີ່ມສະມາຊິກກ່ອນ'); return; }
+  editingExpenseId = null;
+  document.getElementById('expModalTitle').textContent = 'ເພີ່ມລາຍການຄ່າໃຊ້ຈ່າຍ';
+  document.getElementById('submitExpBtn').querySelector('span').textContent = 'ບັນທຶກລາຍການ';
   populateExpenseModal();
   document.getElementById('expErr').classList.remove('show');
   openSheet('expOverlay');
 });
 
-function payerRowTemplate(members){
-  const opts = members.map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+function openEditExpense(id){
+  const e = state.expenses[id];
+  if(!e) return;
+  editingExpenseId = id;
+  document.getElementById('expModalTitle').textContent = 'ແກ້ໄຂລາຍການຄ່າໃຊ້ຈ່າຍ';
+  document.getElementById('submitExpBtn').querySelector('span').textContent = 'ບັນທຶກການແກ້ໄຂ';
+  populateExpenseModal(e);
+  document.getElementById('expErr').classList.remove('show');
+  openSheet('expOverlay');
+}
+
+/* Reverse an expense's effect on member balances (used before edit/delete),
+   then run a callback once all reversal transactions have completed. */
+function reverseExpenseBalances(e, done){
+  const payers = e.payers || (e.paidBy ? [{memberId:e.paidBy, amount:e.amount}] : []);
+  const splitShares = e.splitShares || {}; // per-member share, exact (remainder-distributed)
+  const fallbackShare = e.perPerson || 0;
+  const ops = [];
+  payers.forEach(p=>{
+    ops.push(db.ref('members/'+p.memberId+'/balance').transaction(cur => Math.round((cur||0) - p.amount)));
+  });
+  (e.splitAmong||[]).forEach(id=>{
+    const share = splitShares[id] !== undefined ? splitShares[id] : fallbackShare;
+    ops.push(db.ref('members/'+id+'/balance').transaction(cur => Math.round((cur||0) + share)));
+  });
+  Promise.all(ops).then(done).catch(()=>toast('ເກີດຂໍ້ຜິດພາດຕອນຍົກເລີກຍອດເກົ່າ'));
+}
+
+function deleteExpense(id){
+  const e = state.expenses[id];
+  if(!e) return;
+  if(!confirm(`ລົບລາຍການ "${e.description}" ${fmt(e.amount)} ກີບ ໃຊ່ບໍ?`)) return;
+  reverseExpenseBalances(e, ()=>{
+    db.ref('expenses/'+id).remove()
+      .then(()=>{ writeLog(`ລົບລາຍການ "${e.description}" ${fmt(e.amount)} ກີບ`); toast('ລົບແລ້ວ'); })
+      .catch(()=>toast('ເກີດຂໍ້ຜິດພາດ'));
+  });
+}
+
+function payerRowTemplate(members, prefill){
+  const opts = members.map(m=>`<option value="${m.id}" ${prefill && prefill.memberId===m.id ? 'selected':''}>${escapeHtml(m.name)}</option>`).join('');
   return `<div class="payer-row">
     <select class="payer-member">${opts}</select>
-    <input type="number" min="1" step="1" class="mono payer-amount" placeholder="จำนวนเงิน">
+    <input type="number" min="1" step="1" class="mono payer-amount" placeholder="จำนวนเงิน" value="${prefill ? prefill.amount : ''}">
     <button type="button" class="rm-payer">✕</button>
   </div>`;
 }
@@ -864,18 +1114,31 @@ document.getElementById('addPayerRowBtn').addEventListener('click', ()=>{
   bindPayerRow(wrap.lastElementChild);
 });
 
-function populateExpenseModal(){
+function populateExpenseModal(existing){
   const members = membersArr();
   const payerWrap = document.getElementById('payerRows');
-  payerWrap.innerHTML = payerRowTemplate(members);
-  bindPayerRow(payerWrap.firstElementChild);
+  const existingPayers = existing ? (existing.payers || (existing.paidBy ? [{memberId:existing.paidBy, amount:existing.amount}] : [])) : null;
+
+  if(existingPayers && existingPayers.length > 0){
+    payerWrap.innerHTML = existingPayers.map(p=>payerRowTemplate(members, p)).join('');
+    Array.from(payerWrap.children).forEach(bindPayerRow);
+  } else {
+    payerWrap.innerHTML = payerRowTemplate(members);
+    bindPayerRow(payerWrap.firstElementChild);
+  }
 
   const chipWrap = document.getElementById('expSplitChips');
-  chipWrap.innerHTML = members.map(m=>`<button type="button" class="chip on" data-id="${m.id}">${escapeHtml(m.name)}</button>`).join('');
+  const existingSplit = existing ? (existing.splitAmong || []) : null;
+  chipWrap.innerHTML = members.map(m=>{
+    const on = existingSplit ? existingSplit.includes(m.id) : true; // default: everyone selected for a new bill
+    return `<button type="button" class="chip ${on?'on':''}" data-id="${m.id}">${escapeHtml(m.name)}</button>`;
+  }).join('');
   chipWrap.querySelectorAll('.chip').forEach(c=>{
     c.addEventListener('click', ()=>c.classList.toggle('on'));
   });
-  document.getElementById('expDescInput').value='';
+
+  document.getElementById('expDescInput').value = existing ? existing.description : '';
+  document.getElementById('expCategorySelect').value = existing ? (existing.category || 'other') : 'other';
   updateExpTotalPreview();
 }
 
@@ -883,6 +1146,7 @@ document.getElementById('submitExpBtn').addEventListener('click', ()=>{
   const btn = document.getElementById('submitExpBtn');
   const errEl = document.getElementById('expErr');
   const desc = document.getElementById('expDescInput').value.trim();
+  const category = document.getElementById('expCategorySelect').value;
   const splitIds = Array.from(document.querySelectorAll('#expSplitChips .chip.on')).map(c=>c.dataset.id);
 
   // gather payer rows: each must have a member + valid amount > 0
@@ -901,40 +1165,58 @@ document.getElementById('submitExpBtn').addEventListener('click', ()=>{
   const totalAmount = Object.values(mergedPayers).reduce((s,v)=>s+v,0);
 
   if(!desc || !payersValid || payers.length === 0 || totalAmount <= 0 || splitIds.length === 0){
-    errEl.textContent = 'กรุณากรอกข้อมูลให้ครบและถูกต้อง (ทุกคนที่ออกเงินต้องระบุจำนวนมากกว่า 0)';
+    errEl.textContent = 'ໃສ່ຂໍ້ມູນໃຫ້ຄົບ-ຖືກຕ້ອງ (ທຸກຄົນທີ່ອອກເງິນຕ້ອງລະບຸຈຳນວນຫລາຍກວ່າ 0)';
     errEl.classList.add('show');
     return;
   }
   errEl.classList.remove('show');
-  setLoading(btn, true, 'บันทึกรายการ');
+  setLoading(btn, true, editingExpenseId ? 'ບັນທຶກການແກ້ໄຂ' : 'ບັນທຶກລາຍການ');
 
-  const perPerson = Math.round(totalAmount / splitIds.length);
-  const expenseRef = db.ref('expenses').push();
-
-  // Run one transaction per affected member balance for safe concurrent updates.
-  const balanceDelta = {}; // id -> delta
-  Object.entries(mergedPayers).forEach(([id, amt])=>{ balanceDelta[id] = (balanceDelta[id]||0) + amt; });
-  splitIds.forEach(id=>{ balanceDelta[id] = (balanceDelta[id]||0) - perPerson; });
-
-  const memberOps = Object.entries(balanceDelta).map(([id, delta])=>
-    db.ref('members/'+id+'/balance').transaction(current => Math.round((current||0) + delta))
-  );
+  // Distribute the total exactly so shares always sum to totalAmount (no lost/extra kip from rounding).
+  const n = splitIds.length;
+  const base = Math.floor(totalAmount / n);
+  const remainder = totalAmount - base * n;
+  const splitShares = {};
+  splitIds.forEach((id, idx)=>{ splitShares[id] = base + (idx < remainder ? 1 : 0); });
 
   const payersList = Object.entries(mergedPayers).map(([memberId, amount])=>({memberId, amount}));
+  const expenseData = {
+    description: desc, amount: totalAmount, category, payers: payersList,
+    splitAmong: splitIds, splitShares, perPerson: base,
+    ts: firebase.database.ServerValue.TIMESTAMP
+  };
 
-  Promise.all(memberOps)
-    .then(()=> expenseRef.set({
-        description: desc, amount: totalAmount, payers: payersList, splitAmong: splitIds, perPerson,
-        ts: firebase.database.ServerValue.TIMESTAMP
-      }))
-    .then(()=>{
-      const payerNames = payersList.map(p=>state.members[p.memberId]?.name||'').join(', ');
-      writeLog(`เพิ่มค่าใช้จ่าย "${desc}" ${fmt(totalAmount)} ກີບ (ออกเงินโดย ${payerNames})`);
-      toast('บันทึกรายการแล้ว');
-      closeSheet('expOverlay');
-    })
-    .catch(()=>toast('เกิดข้อผิดพลาด ลองใหม่อีกครั้ง'))
-    .finally(()=>setLoading(btn, false, 'บันทึกรายการ'));
+  function applyNewBalancesAndSave(){
+    const balanceDelta = {};
+    payersList.forEach(p=>{ balanceDelta[p.memberId] = (balanceDelta[p.memberId]||0) + p.amount; });
+    splitIds.forEach(id=>{ balanceDelta[id] = (balanceDelta[id]||0) - splitShares[id]; });
+
+    const memberOps = Object.entries(balanceDelta).map(([id, delta])=>
+      db.ref('members/'+id+'/balance').transaction(current => Math.round((current||0) + delta))
+    );
+
+    const expenseRef = editingExpenseId ? db.ref('expenses/'+editingExpenseId) : db.ref('expenses').push();
+
+    Promise.all(memberOps)
+      .then(()=> expenseRef.set(expenseData))
+      .then(()=>{
+        const payerNames = payersList.map(p=>state.members[p.memberId]?.name||'').join(', ');
+        writeLog(editingExpenseId
+          ? `ແກ້ໄຂລາຍການ "${desc}" ${fmt(totalAmount)} ກີບ`
+          : `ເພີ່ມລາຍການ "${desc}" ${fmt(totalAmount)} ກີບ (ອອກເງິນໂດຍ ${payerNames})`);
+        toast(editingExpenseId ? 'ບັນທຶກການແກ້ໄຂແລ້ວ' : 'ບັນທຶກລາຍການແລ້ວ');
+        closeSheet('expOverlay');
+      })
+      .catch(()=>toast('ເກີດຂໍ້ຜິດພາດ ລອງໃໝ່ອີກຄັ້ງ'))
+      .finally(()=>setLoading(btn, false, editingExpenseId ? 'ບັນທຶກການແກ້ໄຂ' : 'ບັນທຶກລາຍການ'));
+  }
+
+  if(editingExpenseId){
+    // First undo the old expense's effect on balances, then apply the new one.
+    reverseExpenseBalances(state.expenses[editingExpenseId], applyNewBalancesAndSave);
+  } else {
+    applyNewBalancesAndSave();
+  }
 });
 
 /* ================================================================
@@ -1096,6 +1378,45 @@ document.getElementById('downloadQrBtn').addEventListener('click', async () => {
     // Fallback: เปิดรูปในแท็บใหม่กรณีที่ภาพติด CORS Header
     window.open(url, '_blank');
   }
+});
+
+/* ================================================================
+   CSV EXPORT (expenses + final balances)
+   ================================================================ */
+function csvEscape(v){
+  const s = String(v ?? '');
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+  const rows = [];
+  rows.push(['# ລາຍການຄ່າໃຊ້ຈ່າຍ']);
+  rows.push(['ວັນທີ','ລາຍລະອຽດ','ໝວດໝູ່','ຍອດລວມ (ກີບ)','ຄົນອອກເງິນ','ຫານກັບ']);
+  Object.values(state.expenses).sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(e=>{
+    const payers = e.payers || (e.paidBy ? [{memberId:e.paidBy, amount:e.amount}] : []);
+    const payerText = payers.map(p=>`${state.members[p.memberId]?.name||'—'} (${p.amount})`).join('; ');
+    const splitText = (e.splitAmong||[]).map(id=>state.members[id]?.name||'—').join('; ');
+    const d = e.ts ? new Date(e.ts).toLocaleString('th-TH') : '';
+    rows.push([d, e.description||'', CATEGORY_LABELS[e.category]||e.category||'', e.amount||0, payerText, splitText]);
+  });
+  rows.push([]);
+  rows.push(['# ຍອດຄົງເຫລືອສຸດທ້າຍ']);
+  rows.push(['ຊື່','ຍອດ (ກີບ)','ສະຖານະ']);
+  membersArr().forEach(m=>{
+    const bal = Math.round(m.balance||0);
+    rows.push([m.name, bal, bal>=0 ? 'ລໍຖ້າຮັບເງິນ' : 'ຕ້ອງຈ່າຍ']);
+  });
+
+  const csv = '\uFEFF' + rows.map(r=>r.map(csvEscape).join(',')).join('\n'); // BOM so Excel opens Lao/Thai text correctly
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `lak-splitbill-${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('ດາວໂຫລດ CSV ແລ້ວ');
 });
 
 renderAll();
