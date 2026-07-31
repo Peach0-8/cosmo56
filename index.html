@@ -14,6 +14,43 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <style>
+
+/* ---------- Accordion Sections ---------- */
+details.section-accordion {
+  margin: 0 16px 12px;
+  background: var(--paper-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+details.section-accordion summary {
+  padding: 14px 18px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--navy);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+details.section-accordion summary::-webkit-details-marker {
+  display: none;
+}
+details.section-accordion summary::after {
+  content: '▾';
+  font-size: 14px;
+  color: var(--navy2);
+  transition: transform 0.2s ease;
+}
+details.section-accordion[open] summary::after {
+  transform: rotate(180deg);
+}
+details.section-accordion .accordion-content {
+  padding: 0 16px 16px;
+}
+
 /* ============================================================
    DESIGN TOKENS
    ============================================================
@@ -275,46 +312,79 @@ button:disabled{opacity:.5; cursor:not-allowed;}
   <div id="balanceList" class="card" style="padding:6px 16px;"></div>
 </div>
 
-<!-- ============ SETTLEMENT SUGGESTIONS (hub: everyone <-> collector/Admin) ============ -->
-<div class="section">
-  <div class="section-head"><h2>ຕ້ອງຈ່າຍ</h2><span class="count">--</span></div>
-  <div id="settleInList" class="card" style="padding:4px 16px;"></div>
-</div>
-
-<div class="section">
-  <div class="section-head"><h2>ຕ້ອງຈ່າຍຄືນ</h2><span class="count">--</span></div>
-  <div id="settleOutList" class="card" style="padding:4px 16px;"></div>
-</div>
-
-<!-- ============ PUBLIC: PAYMENT REQUEST STATUS ============ -->
-<div class="section">
-  <div class="section-head"><h2>ສະຖານະຄຳຂໍແຈ້ງໂອນ</h2><span class="count" id="publicReqCount"></span></div>
-  <div id="publicRequestList" class="card" style="padding:4px 16px;"></div>
-</div>
-
-<!-- ============ QR ============ -->
-<div class="section">
-  <div class="section-head"><h2>QR CODE (BCEL One)</h2></div>
-  <div class="card qr-card">
-    <img id="qrImg" src="" alt="BCEL One QR" style="display:none;">
-    <button type="button" class="pay-btn" id="downloadQrBtn" style="display:none; margin-top:4px; background:var(--navy2);">📥 ດາວໂຫລດ QR Code</button>
-    <div id="qrEmpty" class="empty" style="padding:8px;">ຍັງບໍ່ມີຮູບ QR — แอดมินสามารถเพิ่มลิงก์รูปได้ในโหมดแอดมิน</div>
-    <div class="cap">ສະແກນແລ້ວກົດ "ແຈ້ງໂອນເງິນ" </div>
+<details class="section-accordion">
+  <summary>
+    <span>🤝 ສະຫລຸບຍອດກອງກາງ</span>
+  </summary>
+  <div class="accordion-content">
+    <div class="section-head" style="margin-top:10px;"><h2>ຕ້ອງຈ່າຍ</h2></div>
+    <div id="settleInList" class="card" style="padding:4px 16px;"></div>
+    <div class="section-head" style="margin-top:10px;"><h2>ຕ້ອງຈ່າຍຄືນ</h2></div>
+    <div id="settleOutList" class="card" style="padding:4px 16px;"></div>
   </div>
-</div>
+</details>
 
-<!-- ============ INVITE / SHARE ============ -->
-<div class="section">
-  <div class="section-head"><h2>ຊວນເພື່ອນເຂົ້າກຸ່ມ</h2></div>
-  <div class="card qr-card">
-    <img id="inviteQrImg" src="" alt="Invite QR" style="width:150px; height:150px; object-fit:contain; border-radius:8px; background:#fff; border:1px solid var(--line);">
-    <div class="cap">ໃຫ້ໝູ່ສະແກນ QR ນີ້ ຫລື ກົດປຸ່ມຄັດລອກລິ້ງເພື່ອສົ່ງໃຫ້ໝູ່</div>
-    <button type="button" class="pay-btn" id="copyLinkBtn" style="background:var(--navy2);">🔗 ຄັດລອກລິ້ງ</button>
+<details class="section-accordion">
+  <summary>
+    <span>📩 ສະຖານະຄຳຂໍແຈ້ງໂອນ</span>
+    <span class="count" id="publicReqCount"></span>
+  </summary>
+  <div class="accordion-content">
+    <div id="publicRequestList" class="card" style="padding:4px 16px; margin-top:10px;"></div>
   </div>
-</div>
+</details>
+
+<details class="section-accordion">
+  <summary>
+    <span>📲 QR CODE (BCEL One)</span>
+  </summary>
+  <div class="accordion-content">
+    <div class="card qr-card" style="border:none; padding:10px 0 0; background:transparent;">
+      <img id="qrImg" src="" alt="BCEL One QR" style="display:none;">
+      <button type="button" class="pay-btn" id="downloadQrBtn" style="display:none; margin-top:4px; background:var(--navy2);">📥 ດາວໂຫລດ QR Code</button>
+      <div id="qrEmpty" class="empty" style="padding:8px;">ຍັງບໍ່ມີຮູບ QR — แอดมินสามารถเพิ่มลิงก์รูปได้ในโหมดแอดมิน</div>
+      <div class="cap">ສະແກນແລ້ວກົດ "ແຈ້ງໂອນເງິນ"</div>
+    </div>
+  </div>
+</details>
+
+<details class="section-accordion">
+  <summary>
+    <span>📜 ປະຫວັດລາຍການ</span>
+    <span class="count" id="expListCount"></span>
+  </summary>
+  <div class="accordion-content">
+    <div class="field" style="margin:10px 0 8px;">
+      <input type="text" id="expenseSearchInput" placeholder="🔍 ຄົ້ນຫາຕາມລາຍລະອຽດ ຫລື ຊື່ຄົນ">
+    </div>
+    <div id="expenseList" class="card" style="padding:4px 16px;"></div>
+  </div>
+</details>
+
+<details class="section-accordion">
+  <summary>
+    <span>📊 ສະຫລຸບຕາມໝວດໝູ່</span>
+  </summary>
+  <div class="accordion-content">
+    <div id="categoryChart" class="card" style="border:none; padding:10px 0 0; background:transparent;"></div>
+  </div>
+</details>
+
+<details class="section-accordion">
+  <summary>
+    <span>🔗 ຊວນເພື່ອນເຂົ້າກຸ່ມ</span>
+  </summary>
+  <div class="accordion-content">
+    <div class="card qr-card" style="border:none; padding:10px 0 0; background:transparent;">
+      <img id="inviteQrImg" src="" alt="Invite QR" style="width:150px; height:150px; object-fit:contain; border-radius:8px; background:#fff; border:1px solid var(--line);">
+      <div class="cap">ໃຫ້ໝູ່ສະແກນ QR ນີ້ ຫລື ກົດປຸ່ມຄັດລອກລິ້ງເພື່ອສົ່ງໃຫ້ໝູ່</div>
+      <button type="button" class="pay-btn" id="copyLinkBtn" style="background:var(--navy2);">🔗 ຄັດລອກລິ້ງ</button>
+    </div>
+  </div>
+</details>
 
 
-<!-- ============ EXPENSE HISTORY ============ -->
+<!-- ============ EXPENSE HISTORY ============ 
 <div class="section">
   <div class="section-head"><h2>ປະຫວັດລາຍການ</h2><span class="count" id="expListCount"></span></div>
   <div class="field" style="margin-bottom:8px;">
@@ -322,12 +392,14 @@ button:disabled{opacity:.5; cursor:not-allowed;}
   </div>
   <div id="expenseList" class="card" style="padding:4px 16px;"></div>
 </div>
+-->
 
-<!-- ============ CATEGORY BREAKDOWN CHART ============ -->
+<!-- ============ CATEGORY BREAKDOWN CHART ============ 
 <div class="section">
   <div class="section-head"><h2>ສະຫລຸບຕາມໝວດໝູ່</h2></div>
   <div id="categoryChart" class="card" style="padding:14px 16px;"></div>
 </div>
+-->
 
 <!-- ============ ADMIN: MEMBERS ============ -->
 <div class="section admin-only hidden" id="adminMembersSection">
@@ -407,7 +479,7 @@ button:disabled{opacity:.5; cursor:not-allowed;}
     </div>
     <div class="field">
       <label>ຈຳນວນເງິນ (ກີບ)</label>
-      <input type="number" min="1" step="1" class="mono" id="payAmountInput" placeholder="เช่น 30000">
+      <div id="payQuickAmounts" class="chip-list" style="margin-bottom:8px;"></div> <input type="number" min="1" step="1" class="mono" id="payAmountInput" placeholder="เช่น 30000">
       <div class="err-msg" id="payErr">ໃສ່ຈຳນວນເງິນທີ່ຖືກຕ້ອງ (ຫລາຍກວ່າ 0)</div>
     </div>
     <button class="primary-btn" id="submitPayBtn"><span>ສົ່ງຄຳຂໍແຈ້ງໂອນເງິນ</span></button>
@@ -430,8 +502,8 @@ button:disabled{opacity:.5; cursor:not-allowed;}
         <option value="food">🍽 ອາຫານ</option>
         <option value="travel">🚗 ເດີນທາງ</option>
         <option value="shopping">🛒 ຂອງໃຊ້</option>
-        <option value="event">🎉 ກິດຈະກຳ</option>
-        <option value="other" selected>📦 ອື່ນໆ</option>
+        <option value="event">🍾 ເຄື່ອງປຸງ</option>
+        <option value="other" selected>🍒 ຄ່າທ້ອມ</option>
       </select>
     </div>
 
@@ -572,6 +644,12 @@ function validAmount(v){
   if (!Number.isFinite(n) || n <= 0) return null;
   return Math.round(n);
 }
+
+// === เพิ่มโค้ดปัดเศษตรงนี้ ===
+function roundUpToThousand(n){
+  return Math.ceil(n / 1000) * 1000;
+}
+// =========================
 
 /* ---------------- realtime listeners ---------------- */
 db.ref('members').on('value', snap=>{ state.members = snap.val() || {}; renderAll(); });
@@ -1172,17 +1250,16 @@ document.getElementById('submitExpBtn').addEventListener('click', ()=>{
   errEl.classList.remove('show');
   setLoading(btn, true, editingExpenseId ? 'ບັນທຶກການແກ້ໄຂ' : 'ບັນທຶກລາຍການ');
 
-  // Distribute the total exactly so shares always sum to totalAmount (no lost/extra kip from rounding).
-  const n = splitIds.length;
-  const base = Math.floor(totalAmount / n);
-  const remainder = totalAmount - base * n;
+const n = splitIds.length;
+  const rawShare = totalAmount / n;
+  const share = roundUpToThousand(rawShare);
   const splitShares = {};
-  splitIds.forEach((id, idx)=>{ splitShares[id] = base + (idx < remainder ? 1 : 0); });
+  splitIds.forEach(id=>{ splitShares[id] = share; });
 
   const payersList = Object.entries(mergedPayers).map(([memberId, amount])=>({memberId, amount}));
   const expenseData = {
     description: desc, amount: totalAmount, category, payers: payersList,
-    splitAmong: splitIds, splitShares, perPerson: base,
+    splitAmong: splitIds, splitShares, perPerson: share,
     ts: firebase.database.ServerValue.TIMESTAMP
   };
 
@@ -1222,6 +1299,9 @@ document.getElementById('submitExpBtn').addEventListener('click', ()=>{
 /* ================================================================
    MARK AS PAID  (member-facing request)
    ================================================================ */
+/* ================================================================
+   MARK AS PAID  (member-facing request)
+   ================================================================ */
 document.getElementById('payFab').addEventListener('click', ()=>{
   const collectorId = state.settings.collectorMemberId;
   const collector = state.members[collectorId];
@@ -1233,9 +1313,31 @@ document.getElementById('payFab').addEventListener('click', ()=>{
   document.getElementById('payToDisplay').value = collector.name + ' (ຜູ້ດູແລກອງກາງ)';
   document.getElementById('payAmountInput').value='';
   document.getElementById('payErr').classList.remove('show');
+  updatePayQuickAmount(); // <-- เพิ่มบรรทัดนี้
   openSheet('payOverlay');
 });
 
+// === เพิ่มฟังก์ชัน 2 บล็อกนี้ต่อท้ายลงมา ===
+function updatePayQuickAmount(){
+  const fromId = document.getElementById('payFromSelect').value;
+  const member = state.members[fromId];
+  const wrap = document.getElementById('payQuickAmounts');
+  if(!member){ wrap.innerHTML = ''; return; }
+  const bal = Math.round(member.balance || 0);
+  if(bal >= 0){
+    wrap.innerHTML = '<span style="font-size:12px; color:#4a473d;">ຄົນນີ້ບໍ່ມີຍອດຄ້າງຈ່າຍ</span>';
+    return;
+  }
+  const owed = roundUpToThousand(Math.abs(bal));
+  wrap.innerHTML = `<button type="button" class="chip on" id="payQuickBtn">ຍອດເຕັມ: ${fmt(owed)} ກີບ</button>`;
+  document.getElementById('payQuickBtn').addEventListener('click', ()=>{
+    document.getElementById('payAmountInput').value = owed;
+  });
+}
+document.getElementById('payFromSelect').addEventListener('change', updatePayQuickAmount);
+// ===================================
+
+// 👇 เพิ่มโค้ดที่หายไปตรงนี้ครับ 👇
 document.getElementById('submitPayBtn').addEventListener('click', ()=>{
   const btn = document.getElementById('submitPayBtn');
   const errEl = document.getElementById('payErr');
@@ -1261,6 +1363,7 @@ document.getElementById('submitPayBtn').addEventListener('click', ()=>{
   }).catch(()=>toast('เกิดข้อผิดพลาด ลองใหม่อีกครั้ง'))
     .finally(()=>setLoading(btn, false, 'ส่งคำขอแจ้งโอน'));
 });
+// 👆 จบส่วนที่เพิ่ม 👆
 
 /* ================================================================
    ADMIN: APPROVE / PARTIAL / REJECT   (all via runTransaction)
