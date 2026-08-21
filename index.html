@@ -849,8 +849,14 @@
   <!-- ============ HERO TICKET ============ -->
   <div class="ticket">
     <div class="eyebrow">ຍອດລວມທັງຫມົດ</div>
-    <div class="total mono"><span id="totalExpense">0</span><small>ກີບ / LAK</small></div>
-    <div class="total mono" style="font-size:20px; margin-top:2px;"><span id="totalExpenseVND">0</span><small>VND</small></div>
+    <div class="total mono"><span id="totalExpense">0</span><small>ກີບ / LAK</small> <span id="totalLAKOverrideBadge"
+        class="hidden"
+        style="font-size:11px; font-weight:700; color:var(--gold); background:rgba(199,154,62,.15); padding:2px 8px; border-radius:999px; vertical-align:middle;">✏️
+        ປັບເອງ</span></div>
+    <div class="total mono" style="font-size:20px; margin-top:2px;"><span
+        id="totalExpenseVND">0</span><small>VND</small> <span id="totalVNDOverrideBadge" class="hidden"
+        style="font-size:10px; font-weight:700; color:var(--gold); background:rgba(199,154,62,.15); padding:2px 7px; border-radius:999px; vertical-align:middle;">✏️
+        ປັບເອງ</span></div>
     <div class="meta-row">
       <span id="memberCountLabel">ສະມາຊິກ 0 ຄົນ</span>
       <span id="expenseCountLabel">ລາຍການ 0 ລາຍການ</span>
@@ -1030,9 +1036,17 @@
 
   <div class="card admin-only hidden">
     <div class="field" style="margin-bottom:8px;">
-      <label>✏️ ແກ້ໄຂ(ຍອດລວມທັງຫມົດ)</label>
-      <input type="number" min="0" step="1" class="mono" id="customTotalInput"
-        placeholder="ໃສ່ຈຳນວນທີ່ຕ້ອງການ (ກີບ / LAK)">
+      <label>✏️ ແກ້ໄຂຍອດລວມ</label>
+      <div style="display:flex; gap:10px; margin-top: 6px;">
+        <div style="flex:1;">
+          <div style="font-size:11px; font-weight:700; color:var(--navy2); margin-bottom:4px;">ກີບ (LAK)</div>
+          <input type="number" min="0" step="1" class="mono" id="customTotalInputLAK" placeholder="ຍອດ LAK">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:11px; font-weight:700; color:var(--navy2); margin-bottom:4px;">ດົ່ງ (VND)</div>
+          <input type="number" min="0" step="1" class="mono" id="customTotalInputVND" placeholder="ຍອດ VND">
+        </div>
+      </div>
     </div>
     <div style="display:flex; gap:8px; margin-top:8px;">
       <button type="button" class="primary-btn" id="saveCustomTotalBtn"
@@ -1041,7 +1055,7 @@
         style="background:var(--coral); padding:11px;">ຮີເຊັດເປັນ 0</button>
     </div>
     <button type="button" class="ghost-btn" id="restoreAutoTotalBtn"
-      style="color:var(--navy); border-color:var(--navy); margin-top:8px;">↺ ຄື່ນຄ່າ</button>
+      style="color:var(--navy); border-color:var(--navy); margin-top:8px;">↺ ຄືນຄ່າອັດຕະໂນມັດ</button>
   </div>
 
   <!-- ============ ADMIN: LOGS ============ -->
@@ -1188,6 +1202,7 @@
         </div>
         <div class="err-msg" id="adjustErr">ໃສ່ຈຳນວນເງິນໃຫ້ຖືກຕ້ອງ (ຫລາຍກວ່າ 0)</div>
         <button class="primary-btn" id="submitAdjustBtn"><span>ບັນທຶກການປັບຍອດ</span></button>
+        
       </div>
 
       <div class="section-head" style="margin-bottom:8px;">
@@ -1390,6 +1405,7 @@
         renderCollectorSelect();
       }
       if (currentDetailMemberId && document.getElementById('memberDetailOverlay').classList.contains('show')) {
+        refreshMemberDetailHeader(currentDetailMemberId);
         renderMemberDetailList(currentDetailMemberId);
       }
     }
@@ -1406,21 +1422,28 @@
       const calculatedTotalLAK = exps.reduce((s, e) => s + (e.amount_LAK ?? e.amount ?? 0), 0);
       const calculatedTotalVND = exps.reduce((s, e) => s + (e.amount_VND || 0), 0);
 
-      // เช็คว่าแอดมินมีการกำหนดค่า customTotalExpense ไว้หรือไม่ (LAK เท่านั้น — ฟีเจอร์เดิม)
       let displayTotalLAK = calculatedTotalLAK;
-      if (state.settings.customTotalExpense !== undefined && state.settings.customTotalExpense !== null) {
-        displayTotalLAK = state.settings.customTotalExpense;
-      }
+      let displayTotalVND = calculatedTotalVND;
+
+      const isLAKOverridden = state.settings.customTotalLAK !== undefined && state.settings.customTotalLAK !== null;
+      const isVNDOverridden = state.settings.customTotalVND !== undefined && state.settings.customTotalVND !== null;
+      if (isLAKOverridden) { displayTotalLAK = state.settings.customTotalLAK; }
+      if (isVNDOverridden) { displayTotalVND = state.settings.customTotalVND; }
 
       document.getElementById('totalExpense').textContent = fmt(displayTotalLAK);
-      document.getElementById('totalExpenseVND').textContent = fmt(calculatedTotalVND);
+      document.getElementById('totalExpenseVND').textContent = fmt(displayTotalVND);
+      document.getElementById('totalLAKOverrideBadge').classList.toggle('hidden', !isLAKOverridden);
+      document.getElementById('totalVNDOverrideBadge').classList.toggle('hidden', !isVNDOverridden);
       document.getElementById('memberCountLabel').textContent = `ສະມາຊິກ ${membersArr().length} ຄົນ`;
       document.getElementById('expenseCountLabel').textContent = `ລາຍການ ${exps.length} ລາຍການ`;
 
-      // อัปเดตตัวเลขในช่องกรอกของแอดมิน (ถ้าไม่ได้พิมพ์อยู่)
-      const inputEl = document.getElementById('customTotalInput');
-      if (inputEl && document.activeElement !== inputEl) {
-        inputEl.value = (state.settings.customTotalExpense !== undefined && state.settings.customTotalExpense !== null) ? state.settings.customTotalExpense : '';
+      const inLAK = document.getElementById('customTotalInputLAK');
+      const inVND = document.getElementById('customTotalInputVND');
+      if (inLAK && document.activeElement !== inLAK) {
+        inLAK.value = (state.settings.customTotalLAK !== undefined && state.settings.customTotalLAK !== null) ? state.settings.customTotalLAK : '';
+      }
+      if (inVND && document.activeElement !== inVND) {
+        inVND.value = (state.settings.customTotalVND !== undefined && state.settings.customTotalVND !== null) ? state.settings.customTotalVND : '';
       }
     }
 
@@ -1509,10 +1532,12 @@
     let adjustSign = 1; // 1 = add, -1 = subtract
     let currentDetailMemberId = null;
 
-    function openMemberDetail(memberId) {
+    /* Renders just the name + balance header of the member-detail modal.
+       Called both when opening it and on every live data update while it's open,
+       so the figures never go stale while the admin is looking at it. */
+    function refreshMemberDetailHeader(memberId) {
       const member = state.members[memberId];
       if (!member) return;
-      currentDetailMemberId = memberId;
 
       document.getElementById('memberDetailName').textContent = member.name;
       const balEl = document.getElementById('memberDetailBalance');
@@ -1538,6 +1563,14 @@
       } else {
         balEl.innerHTML = lines.map(l => `<span style="color:${l.color};">${l.text}</span>`).join('<br>');
       }
+    }
+
+    function openMemberDetail(memberId) {
+      const member = state.members[memberId];
+      if (!member) return;
+      currentDetailMemberId = memberId;
+
+      refreshMemberDetailHeader(memberId);
 
       const adjustBox = document.getElementById('memberAdjustBox');
       if (state.isAdmin) {
@@ -2495,49 +2528,45 @@
     });
 
     /* ================================================================
-       ADMIN: CUSTOM TOTAL EXPENSE OVERRIDE / RESET
-       ================================================================ */
-
-    // 1. ບັນທຶກຍອດລວມตามตัวเลขที่กรอก
-    document.getElementById('saveCustomTotalBtn').addEventListener('click', () => {
+           ADMIN: CUSTOM TOTAL EXPENSE OVERRIDE / RESET
+           ================================================================ */
+    document.getElementById('saveCustomTotalBtn')?.addEventListener('click', () => {
       const btn = document.getElementById('saveCustomTotalBtn');
-      const val = document.getElementById('customTotalInput').value;
-      if (val === '' || isNaN(val) || Number(val) < 0) {
-        toast('ກະລຸນາໃສ່ຈຳນວນເງິນທີ່ຖືກຕ້ອງ');
+      const valLAK = document.getElementById('customTotalInputLAK').value;
+      const valVND = document.getElementById('customTotalInputVND').value;
+
+      let updates = {};
+      if (valLAK !== '' && !isNaN(valLAK) && Number(valLAK) >= 0) updates['settings/customTotalLAK'] = Math.round(Number(valLAK));
+      if (valVND !== '' && !isNaN(valVND) && Number(valVND) >= 0) updates['settings/customTotalVND'] = Math.round(Number(valVND));
+
+      if (Object.keys(updates).length === 0) {
+        toast('ກະລຸນາໃສ່ຈຳນວນເງິນຢ່າງໜ້ອຍ 1 ສະກຸນ');
         return;
       }
-      const amount = Math.round(Number(val));
       setLoading(btn, true, 'ບັນທຶກຍອດລວມ');
-      db.ref('settings/customTotalExpense').set(amount)
-        .then(() => {
-          writeLog(`ແອັດມີນແກ້ໄຂຢອດລວມທັງໝົດເປັນ ${fmt(amount)} ກີບ`);
-          toast('ແກ້ໄຂຍອດລວມສຳເລັດແລ້ວ');
-        })
+      db.ref().update(updates)
+        .then(() => { writeLog('ແອັດມິນແກ້ໄຂຍອດລວມທັງໝົດແລ້ວ'); toast('ແກ້ໄຂຍອດລວມສຳເລັດແລ້ວ'); })
         .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'))
         .finally(() => setLoading(btn, false, 'ບັນທຶກຍອດລວມ'));
     });
 
-    // 2. รีเซ็ตยอดรวมเป็น 0
-    document.getElementById('resetTotalZeroBtn').addEventListener('click', () => {
-      if (!confirm('ຕ້ອງການຮີເຊັດຍອດລວມທັງໝົດເປັນ 0 ກີບ ແມ່ນບໍ່?')) return;
-      db.ref('settings/customTotalExpense').set(0)
-        .then(() => {
-          writeLog('ແອັດມີນຮີເຊັດຢອດລວມທັງໝົດເປັນ 0 ກີບ');
-          toast('ຮີເຊັດຢອດລວມເປັນ 0 ແລ້ວ');
-        })
+    document.getElementById('resetTotalZeroBtn')?.addEventListener('click', () => {
+      if (!confirm('ຕ້ອງການຮີເຊັດຍອດລວມທັງໝົດເປັນ 0 ແມ່ນບໍ່?')) return;
+      db.ref().update({ 'settings/customTotalLAK': 0, 'settings/customTotalVND': 0 })
+        .then(() => { writeLog('ແອັດມິນຮີເຊັດຍອດລວມທັງໝົດເປັນ 0'); toast('ຮີເຊັດຍອດລວມເປັນ 0 ແລ້ວ'); })
         .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'));
     });
 
-    // 3. คืนค่าเป็นระบบคำนวณอัตโนมัติตามบิลจริง
-    document.getElementById('restoreAutoTotalBtn').addEventListener('click', () => {
-      db.ref('settings/customTotalExpense').remove()
+    document.getElementById('restoreAutoTotalBtn')?.addEventListener('click', () => {
+      db.ref().update({ 'settings/customTotalLAK': null, 'settings/customTotalVND': null })
         .then(() => {
-          writeLog('ແອັດມີນຄືນຄ່າຄຳນວນຢອດລວມທັງໝົດເປັນແບບອັດຕະໂນມັດ');
-          document.getElementById('customTotalInput').value = '';
+          writeLog('ແອັດມິນຄືນຄ່າຄຳນວນຍອດລວມທັງໝົດເປັນແບບອັດຕະໂນມັດ');
+          document.getElementById('customTotalInputLAK').value = '';
+          document.getElementById('customTotalInputVND').value = '';
           toast('ຄືນຄ່າການຄຳນວນສຳເລັດແລ້ວ');
-        })
-        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'));
+        }).catch(() => toast('ເກີດຂໍ້ຜິດພາດ'));
     });
+
 
     renderAll();
   </script>
