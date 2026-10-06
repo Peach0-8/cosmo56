@@ -589,6 +589,25 @@
       padding: 0 4px;
     }
 
+    .payer-row .add-zeros-btn {
+      flex: 0 0 auto;
+      background: var(--navy2);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .payer-row .add-zeros-btn:active {
+      background: var(--navy);
+      transform: scale(0.95);
+    }
+
     .payer-row select.payer-currency {
       flex: 0 0 78px;
     }
@@ -834,6 +853,7 @@
 </head>
 
 <body>
+  <!-- html-validate-disable no-inline-style, no-implicit-button-type, attribute-allowed-values, empty-heading, no-trailing-whitespace, autocomplete-password -->
 
   <!-- ============ TOP BAR ============ -->
   <div class="topbar">
@@ -1202,7 +1222,7 @@
         </div>
         <div class="err-msg" id="adjustErr">ໃສ່ຈຳນວນເງິນໃຫ້ຖືກຕ້ອງ (ຫລາຍກວ່າ 0)</div>
         <button class="primary-btn" id="submitAdjustBtn"><span>ບັນທຶກການປັບຍອດ</span></button>
-        
+
       </div>
 
       <div class="section-head" style="margin-bottom:8px;">
@@ -1588,19 +1608,21 @@
       openSheet('memberDetailOverlay');
     }
 
-    /* Lao (Buddhist) calendar date, used across the app wherever a date is shown. */
+    /* Lao (Buddhist) calendar date, used across the app wherever a date is shown.
+       Shows: ວັນ + ວັນທີ່ + ເດືອນ + ປີ + ເວລາ  (e.g. ວັນຈັນ 07 ຕຸລາ 2569 · 14:30) */
     function formatLaoDate(ts) {
       if (!ts) return '';
-      try {
-        return new Date(ts).toLocaleDateString('lo-LA-u-ca-buddhist', { day: '2-digit', month: 'short', year: 'numeric' });
-      } catch (e) {
-        // fallback if the browser doesn't support the buddhist calendar extension
-        const d = new Date(ts);
-        const beYear = d.getFullYear() + 543;
-        const dd = String(d.getDate()).padStart(2, '0');
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        return `${dd}/${mm}/${beYear}`;
-      }
+      const d = new Date(ts);
+      const laoDays = ['ວັນອາທິດ', 'ວັນຈັນ', 'ວັນອັງຄານ', 'ວັນພຸດ', 'ວັນພະຫັດ', 'ວັນສຸກ', 'ວັນເສົາ'];
+      const laoMonths = ['ມັງກອນ', 'ກຸມພາ', 'ມີນາ', 'ເມສາ', 'ພຶດສະພາ', 'ມິຖຸນາ',
+        'ກໍລະກົດ', 'ສິງຫາ', 'ກັນຍາ', 'ຕຸລາ', 'ພະຈິກ', 'ທັນວາ'];
+      const dayName = laoDays[d.getDay()];
+      const dd = String(d.getDate()).padStart(2, '0');
+      const monthName = laoMonths[d.getMonth()];
+      const beYear = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      return `${dayName} ${dd} ${monthName} ${beYear} · ${hh}:${mi}`;
     }
 
     function renderMemberDetailList(memberId) {
@@ -1943,7 +1965,7 @@
       const entries = Object.values(logs).sort((a, b) => (b.ts || 0) - (a.ts || 0));
       if (entries.length === 0) { list.innerHTML = '<div class="empty">ຍັງບໍ່ມີປະຫວັດ</div>'; return; }
       list.innerHTML = entries.map(l => {
-        const d = l.ts ? new Date(l.ts).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '';
+        const d = l.ts ? formatLaoDate(l.ts) : '';
         return `<div style="padding:8px 0; border-bottom:1px solid var(--line); font-size:12.5px;">
       <div>${escapeHtml(l.message)}</div>
       <div style="color:#a09a80; font-size:11px; margin-top:2px;">${d} · ${l.role === 'admin' ? 'ແອັດມິນ' : 'ສະມາຊິກ'}</div>
@@ -2115,6 +2137,7 @@
       return `<div class="payer-row">
     <select class="payer-member">${opts}</select>
     <input type="number" min="1" step="1" class="mono payer-amount" placeholder="ຈຳນວນເງິນ" value="${prefill ? prefill.amount : ''}">
+    <button type="button" class="add-zeros-btn" title="ເພີ່ມ 000"> 000 </button>
     <select class="payer-currency">
       <option value="LAK" ${ccy === 'LAK' ? 'selected' : ''}>ກີບ</option>
       <option value="VND" ${ccy === 'VND' ? 'selected' : ''}>VND</option>
@@ -2137,6 +2160,16 @@
     function bindPayerRow(row) {
       row.querySelector('.payer-amount').addEventListener('input', updateExpTotalPreview);
       row.querySelector('.payer-currency').addEventListener('change', updateExpTotalPreview);
+      row.querySelector('.add-zeros-btn').addEventListener('click', () => {
+        const inp = row.querySelector('.payer-amount');
+        const cur = inp.value.trim();
+        if (!cur || cur === '0') {
+          inp.value = '1000';
+        } else {
+          inp.value = cur + '000';
+        }
+        updateExpTotalPreview();
+      });
       row.querySelector('.rm-payer').addEventListener('click', () => {
         if (document.querySelectorAll('#payerRows .payer-row').length <= 1) return; // keep at least 1 row
         row.remove();
