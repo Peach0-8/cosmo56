@@ -563,11 +563,64 @@
       font-family: 'IBM Plex Mono', monospace;
     }
 
+    .payer-row-wrap {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .payer-row-wrap .payer-note {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 13px;
+      margin-bottom: 7px;
+      background: rgba(255, 255, 255, 0.6);
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .payer-row-wrap .payer-note:focus {
+      border-color: var(--navy2);
+    }
+
+    .payer-row-wrap .payer-note::placeholder {
+      color: #999;
+    }
+
+    .note-quick-btns {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 7px;
+      flex-wrap: wrap;
+    }
+
+    .note-quick-btns button {
+      background: var(--navy2);
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .note-quick-btns button:active {
+      background: var(--navy);
+      transform: scale(0.93);
+    }
+
     .payer-row {
       display: flex;
       gap: 7px;
       align-items: center;
-      margin-bottom: 8px;
     }
 
     .payer-row select {
@@ -1135,11 +1188,11 @@
       <div class="field">
         <label>ໝວດໝູ່</label>
         <select id="expCategorySelect">
-          <option value="food">🍽 ອາຫານ</option>
-          <option value="travel">🚗 ເດີນທາງ</option>
-          <option value="shopping">🛒 ຂອງໃຊ້</option>
-          <option value="event">🍾 ເຄື່ອງປຸງ</option>
-          <option value="other" selected>🍒 ຄ່າທ້ອມ</option>
+          <option value="food"> 🍽 ອາຫານ </option>
+          <option value="travel"> > ⚙️ ເຄື່ອງໃຊ້ </option>
+          <option value="shopping"> ☁️ ສຳລີ </option>
+          <option value="event"> 🍾 ເຄື່ອງປຸງ </option>
+          <option value="other" selected> 🍒 ຄ່າທ້ອມ </option>
         </select>
       </div>
 
@@ -1922,7 +1975,7 @@
     }
 
     /* Simple CSS-based horizontal bar chart summarizing spend by category. */
-    const CATEGORY_LABELS = { food: '🍽 ອາຫານ', travel: '🚗 ເດີນທາງ', shopping: '🛒 ຂອງໃຊ້', event: '🍾 ເຄື່ອງປຸງ', other: '🍒 ຄ່າທ້ອມ' };
+    const CATEGORY_LABELS = { food: ' 🍽 ອາຫານ ', travel: ' ⚙️ ເຄື່ອງໃຊ້ ', shopping: ' ☁️ ສຳລີ ', event: ' 🍾 ເຄື່ອງປຸງ ', other: ' 🍒 ຄ່າທ້ອມ ' };
     function renderCategoryChart() {
       const wrap = document.getElementById('categoryChart');
       const totalsLAK = {}, totalsVND = {};
@@ -2134,7 +2187,15 @@
     function payerRowTemplate(members, prefill) {
       const opts = members.map(m => `<option value="${m.id}" ${prefill && prefill.memberId === m.id ? 'selected' : ''}>${escapeHtml(m.name)}</option>`).join('');
       const ccy = prefill && prefill.currency === 'VND' ? 'VND' : 'LAK';
-      return `<div class="payer-row">
+      const noteVal = prefill && prefill.note ? escapeHtml(prefill.note) : '';
+      return `<div class="payer-row-wrap">
+    <div class="note-quick-btns">
+      <button type="button" data-note="ເຄື່ອງປຸງ">ເຄື່ອງປຸງ</button>
+      <button type="button" data-note="ນ້ຳກ້ອນ">ນ້ຳກ້ອນ</button>
+      <button type="button" data-note="ທ້ອມ">ທ້ອມ</button>
+    </div>
+    <input type="text" class="payer-note" placeholder="ໝາຍເຫດ (ຄ່າຫຍັງ)" value="${noteVal}">
+    <div class="payer-row">
     <select class="payer-member">${opts}</select>
     <input type="number" min="1" step="1" class="mono payer-amount" placeholder="ຈຳນວນເງິນ" value="${prefill ? prefill.amount : ''}">
     <button type="button" class="add-zeros-btn" title="ເພີ່ມ 000"> 000 </button>
@@ -2143,12 +2204,14 @@
       <option value="VND" ${ccy === 'VND' ? 'selected' : ''}>VND</option>
     </select>
     <button type="button" class="rm-payer">✕</button>
+    </div>
   </div>`;
     }
 
     function updateExpTotalPreview() {
       let totalLAK = 0, totalVND = 0;
-      document.querySelectorAll('#payerRows .payer-row').forEach(row => {
+      document.querySelectorAll('#payerRows .payer-row-wrap').forEach(wrap => {
+        const row = wrap.querySelector('.payer-row');
         const amt = validAmount(row.querySelector('.payer-amount').value) || 0;
         const ccy = row.querySelector('.payer-currency').value;
         if (ccy === 'VND') totalVND += amt; else totalLAK += amt;
@@ -2157,7 +2220,8 @@
       document.getElementById('expTotalPreviewVND').textContent = fmtCcy(totalVND, 'VND');
     }
 
-    function bindPayerRow(row) {
+    function bindPayerRow(wrap) {
+      const row = wrap.querySelector('.payer-row');
       row.querySelector('.payer-amount').addEventListener('input', updateExpTotalPreview);
       row.querySelector('.payer-currency').addEventListener('change', updateExpTotalPreview);
       row.querySelector('.add-zeros-btn').addEventListener('click', () => {
@@ -2171,30 +2235,41 @@
         updateExpTotalPreview();
       });
       row.querySelector('.rm-payer').addEventListener('click', () => {
-        if (document.querySelectorAll('#payerRows .payer-row').length <= 1) return; // keep at least 1 row
-        row.remove();
+        if (document.querySelectorAll('#payerRows .payer-row-wrap').length <= 1) return; // keep at least 1 row
+        wrap.remove();
         updateExpTotalPreview();
+      });
+      // quick-fill note buttons
+      wrap.querySelectorAll('.note-quick-btns button[data-note]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const noteInput = wrap.querySelector('.payer-note');
+          const current = noteInput.value.trim();
+          const label = btn.dataset.note;
+          // if already contains this label, don't add again
+          if (current.includes(label)) return;
+          noteInput.value = current ? current + ', ' + label : label;
+        });
       });
     }
 
     document.getElementById('addPayerRowBtn').addEventListener('click', () => {
-      const wrap = document.getElementById('payerRows');
+      const container = document.getElementById('payerRows');
       const members = membersArr();
-      wrap.insertAdjacentHTML('beforeend', payerRowTemplate(members));
-      bindPayerRow(wrap.lastElementChild);
+      container.insertAdjacentHTML('beforeend', payerRowTemplate(members));
+      bindPayerRow(container.lastElementChild);
     });
 
     function populateExpenseModal(existing) {
       const members = membersArr();
-      const payerWrap = document.getElementById('payerRows');
+      const payerContainer = document.getElementById('payerRows');
       const existingPayers = existing ? (existing.payers || (existing.paidBy ? [{ memberId: existing.paidBy, amount: existing.amount }] : [])) : null;
 
       if (existingPayers && existingPayers.length > 0) {
-        payerWrap.innerHTML = existingPayers.map(p => payerRowTemplate(members, p)).join('');
-        Array.from(payerWrap.children).forEach(bindPayerRow);
+        payerContainer.innerHTML = existingPayers.map(p => payerRowTemplate(members, p)).join('');
+        Array.from(payerContainer.children).forEach(bindPayerRow);
       } else {
-        payerWrap.innerHTML = payerRowTemplate(members);
-        bindPayerRow(payerWrap.firstElementChild);
+        payerContainer.innerHTML = payerRowTemplate(members);
+        bindPayerRow(payerContainer.firstElementChild);
       }
 
       const chipWrap = document.getElementById('expSplitChips');
@@ -2220,26 +2295,22 @@
       const splitIds = Array.from(document.querySelectorAll('#expSplitChips .chip.on')).map(c => c.dataset.id);
 
       // gather payer rows: each must have a member + valid amount > 0 + a currency (LAK/VND)
-      const payerRows = Array.from(document.querySelectorAll('#payerRows .payer-row'));
+      const payerWraps = Array.from(document.querySelectorAll('#payerRows .payer-row-wrap'));
       const payers = [];
       let payersValid = true;
-      payerRows.forEach(row => {
+      payerWraps.forEach(wrap => {
+        const row = wrap.querySelector('.payer-row');
         const memberId = row.querySelector('.payer-member').value;
         const amount = validAmount(row.querySelector('.payer-amount').value);
         const currency = row.querySelector('.payer-currency').value === 'VND' ? 'VND' : 'LAK';
+        const note = (wrap.querySelector('.payer-note').value || '').trim();
         if (!memberId || !amount) { payersValid = false; return; }
-        payers.push({ memberId, amount, currency });
+        const entry = { memberId, amount, currency };
+        if (note) entry.note = note;
+        payers.push(entry);
       });
-      // merge duplicate payer entries (same person + same currency entered on two rows)
-      const mergedPayers = {}; // key: `${memberId}_${currency}` -> amount
-      payers.forEach(p => {
-        const key = p.memberId + '_' + p.currency;
-        mergedPayers[key] = (mergedPayers[key] || 0) + p.amount;
-      });
-      const payersList = Object.entries(mergedPayers).map(([key, amount]) => {
-        const idx = key.lastIndexOf('_');
-        return { memberId: key.slice(0, idx), currency: key.slice(idx + 1), amount };
-      });
+      // keep each payer row as a separate entry (preserves individual notes)
+      const payersList = payers;
       const totalLAK = payersList.filter(p => p.currency === 'LAK').reduce((s, p) => s + p.amount, 0);
       const totalVND = payersList.filter(p => p.currency === 'VND').reduce((s, p) => s + p.amount, 0);
 
