@@ -991,33 +991,55 @@
       sel.innerHTML = members.map(m => `<option value="${m.id}" ${m.id === current ? 'selected' : ''}>${escapeHtml(m.name)}</option>`).join('');
     }
 
-    function renderHero() {
+    function getHeroRoundTotals() {
       const exps = Object.values(state.expenses);
-      const calculatedTotalLAK = exps.reduce((s, e) => s + (e.amount_LAK ?? e.amount ?? 0), 0);
-      const calculatedTotalVND = exps.reduce((s, e) => s + (e.amount_VND || 0), 0);
+      const resetTs = Number(state.settings.totalResetTs) || 0;
+      const activeExps = resetTs > 0 ? exps.filter(e => (Number(e.ts) || 0) > resetTs) : exps;
+      const roundTotalLAK = activeExps.reduce((s, e) => s + (e.amount_LAK ?? e.amount ?? 0), 0);
+      const roundTotalVND = activeExps.reduce((s, e) => s + (e.amount_VND || 0), 0);
+      return { exps, activeExps, resetTs, roundTotalLAK, roundTotalVND };
+    }
 
-      let displayTotalLAK = calculatedTotalLAK;
-      let displayTotalVND = calculatedTotalVND;
+    function renderHero() {
+      const { activeExps, resetTs, roundTotalLAK, roundTotalVND } = getHeroRoundTotals();
 
-      const isLAKOverridden = state.settings.customTotalLAK !== undefined && state.settings.customTotalLAK !== null;
-      const isVNDOverridden = state.settings.customTotalVND !== undefined && state.settings.customTotalVND !== null;
-      if (isLAKOverridden) { displayTotalLAK = state.settings.customTotalLAK; }
-      if (isVNDOverridden) { displayTotalVND = state.settings.customTotalVND; }
+      const hasOffsetLAK = state.settings.totalOffsetLAK !== undefined && state.settings.totalOffsetLAK !== null;
+      const hasOffsetVND = state.settings.totalOffsetVND !== undefined && state.settings.totalOffsetVND !== null;
+      const hasLegacyLAK = !hasOffsetLAK && !resetTs && state.settings.customTotalLAK !== undefined && state.settings.customTotalLAK !== null;
+      const hasLegacyVND = !hasOffsetVND && !resetTs && state.settings.customTotalVND !== undefined && state.settings.customTotalVND !== null;
+
+      const displayTotalLAK = hasOffsetLAK
+        ? Math.max(0, roundTotalLAK + Number(state.settings.totalOffsetLAK))
+        : (hasLegacyLAK ? Number(state.settings.customTotalLAK) : roundTotalLAK);
+      const displayTotalVND = hasOffsetVND
+        ? Math.max(0, roundTotalVND + Number(state.settings.totalOffsetVND))
+        : (hasLegacyVND ? Number(state.settings.customTotalVND) : roundTotalVND);
+
+      const badgeLAK = document.getElementById('totalLAKOverrideBadge');
+      const badgeVND = document.getElementById('totalVNDOverrideBadge');
+      const showLAKBadge = hasOffsetLAK || hasLegacyLAK || resetTs > 0;
+      const showVNDBadge = hasOffsetVND || hasLegacyVND || resetTs > 0;
+      if (badgeLAK) {
+        badgeLAK.textContent = (hasOffsetLAK || hasLegacyLAK) ? 'ປັບເອງ' : 'ຮອບໃໝ່';
+        badgeLAK.classList.toggle('hidden', !showLAKBadge);
+      }
+      if (badgeVND) {
+        badgeVND.textContent = (hasOffsetVND || hasLegacyVND) ? 'ປັບເອງ' : 'ຮອບໃໝ່';
+        badgeVND.classList.toggle('hidden', !showVNDBadge);
+      }
 
       document.getElementById('totalExpense').textContent = fmt(displayTotalLAK);
       document.getElementById('totalExpenseVND').textContent = fmt(displayTotalVND);
-      document.getElementById('totalLAKOverrideBadge').classList.toggle('hidden', !isLAKOverridden);
-      document.getElementById('totalVNDOverrideBadge').classList.toggle('hidden', !isVNDOverridden);
       document.getElementById('memberCountLabel').textContent = `ສະມາຊິກ ${membersArr().length} ຄົນ`;
-      document.getElementById('expenseCountLabel').textContent = `ລາຍການ ${exps.length} ລາຍການ`;
+      document.getElementById('expenseCountLabel').textContent = `ລາຍການ ${activeExps.length} ລາຍການ`;
 
       const inLAK = document.getElementById('customTotalInputLAK');
       const inVND = document.getElementById('customTotalInputVND');
       if (inLAK && document.activeElement !== inLAK) {
-        inLAK.value = (state.settings.customTotalLAK !== undefined && state.settings.customTotalLAK !== null) ? state.settings.customTotalLAK : '';
+        inLAK.value = (hasOffsetLAK || hasLegacyLAK) ? Math.round(displayTotalLAK) : '';
       }
       if (inVND && document.activeElement !== inVND) {
-        inVND.value = (state.settings.customTotalVND !== undefined && state.settings.customTotalVND !== null) ? state.settings.customTotalVND : '';
+        inVND.value = (hasOffsetVND || hasLegacyVND) ? Math.round(displayTotalVND) : '';
       }
     }
 
@@ -2605,7 +2627,7 @@
     });
 
     /* ================================================================
-           ADMIN: CUSTOM TOTAL EXPENSE OVERRIDE / RESET
+           ADMIN: CUSTOM TOTAL EXPENSE OVERRIDE / NEW-ROUND RESET
            ================================================================ */
     document.getElementById('saveCustomTotalBtn')?.addEventListener('click', () => {
       if (!requireAdmin()) return;
@@ -2619,9 +2641,13 @@
         return;
       }
 
+      // Store as an offset relative to current round total so future new bills keep adding on top
+      const { roundTotalLAK, roundTotalVND } = getHeroRoundTotals();
       const updates = {
-        'settings/customTotalLAK': valLAK === '' ? null : Math.round(Number(valLAK)),
-        'settings/customTotalVND': valVND === '' ? null : Math.round(Number(valVND))
+        'settings/totalOffsetLAK': valLAK === '' ? null : (Math.round(Number(valLAK)) - roundTotalLAK),
+        'settings/totalOffsetVND': valVND === '' ? null : (Math.round(Number(valVND)) - roundTotalVND),
+        'settings/customTotalLAK': null,
+        'settings/customTotalVND': null
       };
 
       setLoading(btn, true, 'ບັນທຶກຍອດລວມ');
@@ -2633,20 +2659,37 @@
 
     document.getElementById('resetTotalZeroBtn')?.addEventListener('click', () => {
       if (!requireAdmin()) return;
-      if (!confirm('ຕ້ອງການຮີເຊັດຍອດລວມທັງໝົດເປັນ 0 ແມ່ນບໍ່?')) return;
-      db.ref().update({ 'settings/customTotalLAK': 0, 'settings/customTotalVND': 0 })
-        .then(() => { writeLog('ແອັດມິນຮີເຊັດຍອດລວມທັງໝົດເປັນ 0'); toast('ຮີເຊັດຍອດລວມເປັນ 0 ແລ້ວ'); })
+      if (!confirm('ຕ້ອງການຮີເຊັດຍອດລວມເປັນ 0 ເພື່ອເລີ່ມນັບບິນຮອບໃໝ່ແມ່ນບໍ່? (ປະຫວັດບິນເກົ່າຍັງເກັບໄວ້)')) return;
+      db.ref().update({
+        'settings/totalResetTs': firebase.database.ServerValue.TIMESTAMP,
+        'settings/totalOffsetLAK': null,
+        'settings/totalOffsetVND': null,
+        'settings/customTotalLAK': null,
+        'settings/customTotalVND': null
+      })
+        .then(() => {
+          writeLog('ແອັດມິນຮີເຊັດຍອດລວມເປັນ 0 (ເລີ່ມນັບຮອບໃໝ່)');
+          document.getElementById('customTotalInputLAK').value = '';
+          document.getElementById('customTotalInputVND').value = '';
+          toast('ຮີເຊັດເປັນ 0 ແລ້ວ — ບິນໃໝ່ຈະເລີ່ມນັບຕໍ່ຈາກ 0');
+        })
         .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'));
     });
 
     document.getElementById('restoreAutoTotalBtn')?.addEventListener('click', () => {
       if (!requireAdmin()) return;
-      db.ref().update({ 'settings/customTotalLAK': null, 'settings/customTotalVND': null })
+      db.ref().update({
+        'settings/totalResetTs': null,
+        'settings/totalOffsetLAK': null,
+        'settings/totalOffsetVND': null,
+        'settings/customTotalLAK': null,
+        'settings/customTotalVND': null
+      })
         .then(() => {
           writeLog('ແອັດມິນຄືນຄ່າຄຳນວນຍອດລວມທັງໝົດເປັນແບບອັດຕະໂນມັດ');
           document.getElementById('customTotalInputLAK').value = '';
           document.getElementById('customTotalInputVND').value = '';
-          toast('ຄືນຄ່າການຄຳນວນສຳເລັດແລ້ວ');
+          toast('ຄືນຄ່າການຄຳນວນລວມທັງໝົດແລ້ວ');
         }).catch(() => toast('ເກີດຂໍ້ຜິດພາດ'));
     });
 
