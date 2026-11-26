@@ -1,0 +1,2743 @@
+<!DOCTYPE html>
+<html lang="la">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#F6F5F1">
+  <title>ໃບບິນຄ່າທ້ອມ (LAK)</title>
+
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('harnNganTheme');
+        var theme = (saved === 'dark' || saved === 'light')
+          ? saved
+          : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        var m = document.querySelector('meta[name="theme-color"]');
+        if (m) m.setAttribute('content', theme === 'dark' ? '#0E0D0C' : '#F6F5F1');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Noto+Sans+Lao:wght@400;500;600;700&family=Phetsarath:wght@400;700&display=swap"
+    rel="stylesheet">
+  <!-- Firebase (compat SDK — simplest for CDN + runTransaction) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <!-- วางไฟล์โลโก้แถบ URL ชื่อ favicon.png และโลโก้เว็บไซต์ชื่อ logo.png ในโฟลเดอร์โปรเจกต์นี้ -->
+  <link rel="icon" type="image/png" sizes="64x64" href="./icons/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" href="./logo.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+  <!-- html-validate-disable no-inline-style, no-implicit-button-type, attribute-allowed-values, empty-heading, no-trailing-whitespace, autocomplete-password -->
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-left">
+        <!-- ຊ່ອງໂລໂກ້ເວັບໄຊ: ວາງໄຟລ໌ຊື່ logo.png ໃນໂຟລເດີໂປຣເຈັກນີ້ (ຖ້າຍັງບໍ່ມີໄຟລ໌ ຈະສະແດງໄອຄອນສຳຮອງອັດຕະໂນມັດ) -->
+        <div class="brand-mark" id="siteLogoWrap">
+          <img id="siteLogoImg" class="brand-logo-img" src="./logo.png" alt="ໂລໂກ້ເວັບໄຊ" style="display:none;">
+          <svg id="siteLogoFallback" class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2 4 7v10l8 5 8-5V7l-8-5Z" />
+            <path d="M12 22V12" />
+            <path d="m20 7-8 5-8-5" />
+          </svg>
+        </div>
+        <div>
+          <h1>ໃບບິນ · ຄ່າທ້ອມ</h1>
+          <p class="sub" id="groupSubtitle">ບັນຊີກອງກາງ · LAK &amp; VND</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" class="theme-btn" id="themeToggleBtn" aria-label="ສະຫຼັບໂໝດກາງວັນ / ກາງຄືນ"
+          aria-pressed="false" title="ສະຫຼັບໂໝດກາງວັນ / ກາງຄືນ">
+          <svg class="ico ico-moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+          </svg>
+          <svg class="ico ico-sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2" />
+            <path d="M12 20v2" />
+            <path d="m4.93 4.93 1.41 1.41" />
+            <path d="m17.66 17.66 1.41 1.41" />
+            <path d="M2 12h2" />
+            <path d="M20 12h2" />
+            <path d="m6.34 17.66-1.41 1.41" />
+            <path d="m19.07 4.93-1.41 1.41" />
+          </svg>
+        </button>
+        <button type="button" class="admin-btn" id="adminToggleBtn" aria-label="ສະຫຼັບໂໝດແອັດມິນ">
+          <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path class="ico-fill" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <circle cx="12" cy="11" r="2" />
+            <path d="M12 13v2.5" />
+          </svg>
+          <span>Admin</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <!-- ============ HERO PRIVATE-BANKING CARD ============ -->
+    <section class="ticket" aria-label="ສະຫລຸບຍອດລວມ">
+      <div class="ticket-top-row">
+        <div class="eyebrow">ຍອດລວມທັງໝົດ</div>
+        <span class="ticket-chip mono">LEDGER</span>
+      </div>
+      <div class="total mono">
+        <span id="totalExpense">0</span><small>ກີບ / LAK</small>
+        <span id="totalLAKOverrideBadge" class="override-badge hidden">ປັບເອງ</span>
+      </div>
+      <div class="total-sub mono">
+        <span id="totalExpenseVND">0</span><small>VND</small>
+        <span id="totalVNDOverrideBadge" class="override-badge hidden">ປັບເອງ</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-item">
+          <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span id="memberCountLabel">ສະມາຊິກ 0 ຄົນ</span>
+        </span>
+        <span class="meta-item">
+          <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
+            <path d="M8 7h8" />
+            <path d="M8 11h8" />
+            <path d="M8 15h5" />
+          </svg>
+          <span id="expenseCountLabel">ລາຍການ 0 ລາຍການ</span>
+        </span>
+      </div>
+    </section>
+
+    <!-- ============ BALANCES ============ -->
+    <section class="section">
+      <div class="section-head">
+        <h2>ຈຳນວນທີ່ຕ້ອງຈ່າຍ</h2>
+        <span class="count" id="balanceCount"></span>
+      </div>
+      <div id="balanceList" class="card" style="padding:6px 12px;"></div>
+    </section>
+
+    <!-- ============ ACCORDION: SETTLEMENT ============ -->
+    <details class="section-accordion">
+      <summary>
+        <span class="acc-title">
+          <span class="acc-icon" aria-hidden="true">
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="m17 2 4 4-4 4" />
+              <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+              <path d="m7 22-4-4 4-4" />
+              <path d="M21 13v1a4 4 0 0 1-4 4H3" />
+            </svg>
+          </span>
+          <span>ສະຫລຸບຍອດກອງກາງ</span>
+        </span>
+        <span class="acc-right">
+          <svg class="ico acc-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+      </summary>
+      <div class="accordion-content">
+        <div class="section-head" style="margin-top:12px;">
+          <h2>ຕ້ອງຈ່າຍ</h2>
+        </div>
+        <div id="settleInList" class="card" style="padding:4px 16px; box-shadow:none; background:var(--bg);"></div>
+        <div class="section-head" style="margin-top:12px;">
+          <h2>ຕ້ອງຈ່າຍຄືນ</h2>
+        </div>
+        <div id="settleOutList" class="card"
+          style="padding:4px 16px; box-shadow:none; background:var(--bg); margin-bottom:0;"></div>
+      </div>
+    </details>
+
+    <!-- ============ ACCORDION: PUBLIC REQUESTS ============ -->
+    <details class="section-accordion">
+      <summary>
+        <span class="acc-title">
+          <span class="acc-icon" aria-hidden="true">
+            <svg class="ico" viewBox="0 0 24 24">
+              <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+              <path
+                d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+            </svg>
+          </span>
+          <span>ສະຖານະຄຳຂໍແຈ້ງໂອນ</span>
+        </span>
+        <span class="acc-right">
+          <span class="count" id="publicReqCount"></span>
+          <svg class="ico acc-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+      </summary>
+      <div class="accordion-content">
+        <div id="publicRequestList" class="card"
+          style="padding:4px 14px; margin:10px 0 0; box-shadow:none; background:var(--bg);"></div>
+      </div>
+    </details>
+
+    <!-- ============ ACCORDION: QR CODE ============ -->
+    <details class="section-accordion">
+      <summary>
+        <span class="acc-title">
+          <span class="acc-icon" aria-hidden="true">
+            <svg class="ico" viewBox="0 0 24 24">
+              <rect width="5" height="5" x="3" y="3" rx="1" />
+              <rect width="5" height="5" x="16" y="3" rx="1" />
+              <rect width="5" height="5" x="3" y="16" rx="1" />
+              <path d="M21 16h-3a2 2 0 0 0-2 2v3" />
+              <path d="M21 21v.01" />
+              <path d="M12 7v3a2 2 0 0 1-2 2H7" />
+              <path d="M3 12h.01" />
+              <path d="M12 3h.01" />
+              <path d="M12 16v.01" />
+              <path d="M16 12h1" />
+              <path d="M21 12v.01" />
+              <path d="M12 21v-1" />
+            </svg>
+          </span>
+          <span>QR CODE ສຳລັບໂອນເງິນ</span>
+        </span>
+        <span class="acc-right">
+          <svg class="ico acc-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+      </summary>
+      <div class="accordion-content">
+        <!-- QR Currency Tabs -->
+        <div class="qr-section-tabs">
+          <button type="button" class="active" data-qr-tab="lak">ກີບ · BCEL One</button>
+          <button type="button" data-qr-tab="vnd">VND · ເວຍດນາມ</button>
+        </div>
+
+        <!-- LAK QR Tab -->
+        <div class="qr-tab-content active" id="qrTabLAK">
+          <div class="card qr-card" style="border:none; box-shadow:none; margin:0; background:transparent;">
+            <img id="qrImg" src="" alt="BCEL One QR" style="display:none;">
+            <button type="button" class="qr-dl-btn" id="downloadQrBtn" style="display:none;">
+              <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" x2="12" y1="15" y2="3" />
+              </svg>
+              <span>ດາວໂຫລດ QR (ກີບ)</span>
+            </button>
+            <div id="qrEmpty" class="empty" style="padding:10px;">ຍັງບໍ່ມີຮູບ QR ກີບ —
+              ແອັດມິນສາມາດເພີ່ມຮູບໄດ້ໃນໂໝດແອັດມິນ</div>
+            <div class="cap">ສະແກນແລ້ວກົດ "ແຈ້ງໂອນເງິນ"</div>
+          </div>
+        </div>
+
+        <!-- VND QR Tab -->
+        <div class="qr-tab-content" id="qrTabVND">
+          <div class="card qr-card" style="border:none; box-shadow:none; margin:0; background:transparent;">
+            <img id="qrImgVND" src="" alt="VND QR" style="display:none;">
+            <button type="button" class="qr-dl-btn" id="downloadQrVNDBtn" style="display:none;">
+              <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" x2="12" y1="15" y2="3" />
+              </svg>
+              <span>ດາວໂຫລດ QR (VND)</span>
+            </button>
+            <div id="qrEmptyVND" class="empty" style="padding:10px;">ຍັງບໍ່ມີຮູບ QR VND —
+              ແອັດມິນສາມາດເພີ່ມຮູບໄດ້ໃນໂໝດແອັດມິນ</div>
+            <div class="cap">ສະແກນເພື່ອໂອນເງິນ VND</div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ============ ACCORDION: EXPENSE HISTORY ============ -->
+    <details class="section-accordion">
+      <summary>
+        <span class="acc-title">
+          <span class="acc-icon" aria-hidden="true">
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
+              <path d="M8 7h8" />
+              <path d="M8 11h8" />
+              <path d="M8 15h5" />
+            </svg>
+          </span>
+          <span>ປະຫວັດລາຍການ</span>
+        </span>
+        <span class="acc-right">
+          <span class="count" id="expListCount"></span>
+          <svg class="ico acc-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+      </summary>
+      <div class="accordion-content">
+        <div class="field" style="margin:12px 0 10px;">
+          <input type="search" id="expenseSearchInput" placeholder="ຄົ້ນຫາຕາມລາຍລະອຽດ, ໝາຍເຫດ ຫລື ຊື່ຄົນ"
+            aria-label="ຄົ້ນຫາລາຍການ">
+        </div>
+        <div id="expenseList" class="card"
+          style="padding:4px 14px; margin-bottom:0; box-shadow:none; background:var(--bg);"></div>
+      </div>
+    </details>
+
+    <!-- ============ ACCORDION: CATEGORY BREAKDOWN ============ -->
+    <details class="section-accordion">
+      <summary>
+        <span class="acc-title">
+          <span class="acc-icon" aria-hidden="true">
+            <svg class="ico" viewBox="0 0 24 24">
+              <line x1="18" x2="18" y1="20" y2="10" />
+              <line x1="12" x2="12" y1="20" y2="4" />
+              <line x1="6" x2="6" y1="20" y2="14" />
+            </svg>
+          </span>
+          <span>ສະຫລຸບຕາມໝວດໝູ່</span>
+        </span>
+        <span class="acc-right">
+          <svg class="ico acc-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+      </summary>
+      <div class="accordion-content">
+        <div id="categoryChart" class="card"
+          style="border:none; box-shadow:none; padding:12px 2px 2px; margin:0; background:transparent;"></div>
+      </div>
+    </details>
+
+    <!-- ============ ACCORDION: INVITE ============ -->
+    <details class="section-accordion">
+      <summary>
+        <span class="acc-title">
+          <span class="acc-icon" aria-hidden="true">
+            <svg class="ico" viewBox="0 0 24 24">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            </svg>
+          </span>
+          <span>ຊວນເພື່ອນເຂົ້າກຸ່ມ</span>
+        </span>
+        <span class="acc-right">
+          <svg class="ico acc-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+      </summary>
+      <div class="accordion-content">
+        <div class="card qr-card" style="border:none; box-shadow:none; margin:0; background:transparent;">
+          <img id="inviteQrImg" src="" alt="Invite QR" style="width:156px; height:156px;">
+          <div class="cap">ໃຫ້ໝູ່ສະແກນ QR ນີ້ ຫລື ກົດປຸ່ມຄັດລອກລິ້ງເພື່ອສົ່ງໃຫ້ໝູ່</div>
+          <button type="button" class="pay-btn" id="copyLinkBtn">
+            <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+            </svg>
+            <span>ຄັດລອກລິ້ງ</span>
+          </button>
+        </div>
+      </div>
+    </details>
+
+    <!-- ============ ADMIN: MEMBERS ============ -->
+    <section class="section admin-only hidden" id="adminMembersSection" style="margin-top:24px;">
+      <div class="section-head">
+        <h2>ຈັດການສະມາຊິກ</h2>
+      </div>
+      <div class="card" style="padding:6px 16px;" id="memberMgmtList"></div>
+      <div class="card">
+        <div class="field" style="margin-bottom:10px;">
+          <label for="newMemberName">ເພີ່ມສະມາຊິກໃໝ່</label>
+          <input type="text" id="newMemberName" placeholder="ຊື່ສະມາຊິກໃໝ່">
+        </div>
+        <button type="button" class="primary-btn" id="addMemberBtn"><span>+ ເພີ່ມສະມາຊິກ</span></button>
+      </div>
+    </section>
+
+    <!-- ============ ADMIN: PAYMENT REQUESTS ============ -->
+    <details class="section-accordion admin-only hidden" id="adminRequestsSection">
+      <summary>
+        <span class="acc-title">
+          <span class="acc-icon" aria-hidden="true">
+            <svg class="ico" viewBox="0 0 24 24">
+              <rect width="20" height="14" x="2" y="5" rx="2" />
+              <line x1="2" x2="22" y1="10" y2="10" />
+            </svg>
+          </span>
+          <span>ຄຳຂໍແຈ້ງໂອນເງິນ (Admin)</span>
+        </span>
+        <span class="acc-right">
+          <span class="count" id="reqCount"></span>
+          <svg class="ico acc-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+      </summary>
+      <div class="accordion-content">
+        <div id="requestList" style="margin-top:12px;"></div>
+      </div>
+    </details>
+
+    <!-- ============ ADMIN: QR + SETTINGS ============ -->
+    <section class="section admin-only hidden" id="adminSettingsSection" style="margin-top:18px;">
+      <div class="section-head">
+        <h2>ຕັ້ງຄ່າກຸ່ມ</h2>
+      </div>
+      <div class="card">
+        <div class="field">
+          <label for="collectorSelect">ຜູ້ດູແລ (Admin ທີ່ທຸກຄົນໂອນເງິນໄປຮວມ)</label>
+          <select id="collectorSelect"></select>
+        </div>
+        <button type="button" class="primary-btn" id="saveCollectorBtn"><span>ບັນທຶກຜູ້ດູແລ</span></button>
+        <p class="helper-text">ທຸກຄົນ (ຍົກເວັ້ນຄົນນີ້) ຈະໂອນເງິນເຂົ້າຫາຄົນນີ້ກ່ອນ
+          ແລ້ວຄົນນີ້ຈະເປັນຄົນໂອນຄືນໃຫ້ຄົນທີ່ອອກເງິນເກີນສ່ວນຂອງຕົນເອງ</p>
+      </div>
+
+      <div class="card">
+        <div class="field">
+          <label for="qrUrlInput">ລິ້ງຮູບ QR ກີບ — BCEL One (URL ຫລື ອັບໂຫລດຮູບ)</label>
+          <input type="text" id="qrUrlInput" placeholder="https://...">
+          <div style="margin-top:10px;">
+            <label class="upload-pill">
+              <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" x2="12" y1="3" y2="15" />
+              </svg>
+              <span>ອັບໂຫລດຮູບ QR ກີບ</span>
+              <input type="file" accept="image/*" id="qrFileInputLAK" style="display:none;">
+            </label>
+          </div>
+        </div>
+        <button type="button" class="primary-btn" id="saveQrBtn"><span>ບັນທຶກ QR ກີບ</span></button>
+      </div>
+
+      <div class="card">
+        <div class="field">
+          <label for="qrUrlInputVND">ລິ້ງຮູບ QR VND — ເງິນເວຍດນາມ (URL ຫລື ອັບໂຫລດຮູບ)</label>
+          <input type="text" id="qrUrlInputVND" placeholder="https://...">
+          <div style="margin-top:10px;">
+            <label class="upload-pill">
+              <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" x2="12" y1="3" y2="15" />
+              </svg>
+              <span>ອັບໂຫລດຮູບ QR VND</span>
+              <input type="file" accept="image/*" id="qrFileInputVND" style="display:none;">
+            </label>
+          </div>
+        </div>
+        <button type="button" class="primary-btn" id="saveQrVNDBtn"><span>ບັນທຶກ QR VND</span></button>
+      </div>
+
+      <div class="card">
+        <div class="field" style="margin-bottom:0;">
+          <label>ແຈ້ງເຕືອນ (Browser Notification)</label>
+          <p class="helper-text" style="margin:0 0 10px;">ເປີດແລ້ວ ຈະມີການແຈ້ງເຕືອນເມື່ອມີຄຳຂໍແຈ້ງໂອນໃໝ່ເຂົ້າມາ
+            (ຕ້ອງເປີດແທັບນີ້ຄ້າງໄວ້)</p>
+          <button type="button" class="pay-btn" id="enableNotifBtn">
+            <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            </svg>
+            <span>ເປີດການແຈ້ງເຕືອນ</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="field" style="margin-bottom:0;">
+          <label>ສົ່ງອອກຂໍ້ມູນ</label>
+          <p class="helper-text" style="margin:0 0 10px;">ດາວໂຫລດລາຍການຄ່າໃຊ້ຈ່າຍ ແລະ ຍອດຄົງເຫລືອທັງໝົດເປັນ CSV
+            (ເປີດດ້ວຍ Excel ໄດ້)</p>
+          <button type="button" class="pay-btn btn-ok" id="exportCsvBtn">
+            <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+              <polyline points="14 2 14 8 20 8" />
+              <path d="M8 13h2" />
+              <path d="M8 17h2" />
+              <path d="M14 13h2" />
+              <path d="M14 17h2" />
+            </svg>
+            <span>ດາວໂຫລດ CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="field" style="margin-bottom:10px;">
+          <label>ແກ້ໄຂຍອດລວມ</label>
+          <div style="display:flex; gap:10px; margin-top:6px;">
+            <div style="flex:1;">
+              <div style="font-size:11.5px; font-weight:600; color:var(--ink-muted); margin-bottom:4px;">ກີບ (LAK)</div>
+              <input type="number" min="0" step="1" class="mono" id="customTotalInputLAK" placeholder="ຍອດ LAK">
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:11.5px; font-weight:600; color:var(--ink-muted); margin-bottom:4px;">ດົ່ງ (VND)
+              </div>
+              <input type="number" min="0" step="1" class="mono" id="customTotalInputVND" placeholder="ຍອດ VND">
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button type="button" class="primary-btn" id="saveCustomTotalBtn"
+            style="flex:1;"><span>ບັນທຶກຍອດລວມ</span></button>
+          <button type="button" class="pay-btn btn-danger" id="resetTotalZeroBtn"
+            style="padding:0 14px; min-height:48px; border-radius:14px;">ຮີເຊັດ 0</button>
+        </div>
+        <button type="button" class="ghost-btn" id="restoreAutoTotalBtn">
+          <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+          <span>ຄືນຄ່າອັດຕະໂນມັດ</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ ADMIN: LOGS ============ -->
+    <section class="section admin-only hidden" id="adminLogsSection">
+      <div class="section-head">
+        <h2>ປະຫວັດ (Audit Log)</h2>
+      </div>
+      <div id="logList" class="card" style="padding:6px 16px; max-height:280px; overflow-y:auto;"></div>
+    </section>
+  </main>
+
+  <!-- ============ FLOATING BOTTOM ACTION DOCK ============ -->
+  <nav class="fab-dock" aria-label="ຄຳສັ່ງຫຼັກ">
+    <button type="button" class="fab fab-secondary" id="addExpFab">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+        <line x1="12" x2="12" y1="5" y2="19" />
+        <line x1="5" x2="19" y1="12" y2="12" />
+      </svg>
+      <span>ເພີ່ມບິນ</span>
+    </button>
+    <button type="button" class="fab fab-primary" id="payFab">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+        <line x1="22" x2="11" y1="2" y2="13" />
+        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+      </svg>
+      <span>ແຈ້ງໂອນເງິນ</span>
+    </button>
+  </nav>
+
+  <!-- ============ MODAL: MARK AS PAID ============ -->
+  <div class="overlay" id="payOverlay" role="dialog" aria-modal="true" aria-labelledby="payModalHeading">
+    <div class="sheet">
+      <button type="button" class="close" data-close="payOverlay" aria-label="ປິດ">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" x2="6" y1="6" y2="18" />
+          <line x1="6" x2="18" y1="6" y2="18" />
+        </svg>
+      </button>
+      <h3 id="payModalHeading">ແຈ້ງໂອນເງິນ</h3>
+      <div class="field">
+        <label for="payFromSelect">ຂ້ອຍແມ່ນໃຜ</label>
+        <select id="payFromSelect"></select>
+      </div>
+      <div class="field">
+        <label for="payToDisplay">ໂອນໃຫ້ໃຜ</label>
+        <input type="text" id="payToDisplay" disabled class="mono">
+      </div>
+      <div class="field">
+        <label for="payCurrencySelect">ສະກຸນເງິນ</label>
+        <select id="payCurrencySelect">
+          <option value="LAK">ກີບ (LAK)</option>
+          <option value="VND">ດົ່ງຫວຽດນາມ (VND)</option>
+        </select>
+      </div>
+
+      <!-- QR Code in payment modal -->
+      <div id="payModalQrSection" style="margin-bottom:14px;">
+        <div
+          style="background:var(--bg); border-radius:16px; border:1px solid var(--line); padding:16px; text-align:center;">
+          <div id="payModalQrLabel" style="font-size:12.5px; font-weight:700; color:var(--ink); margin-bottom:10px;">QR
+            Code ສຳລັບໂອນເງິນ</div>
+          <img id="payModalQrImg" src="" alt="QR"
+            style="display:none; width:168px; height:168px; object-fit:contain; border-radius:12px; border:1px solid var(--line); background:#fff; padding:6px; margin:0 auto;">
+          <div id="payModalQrEmpty" style="padding:10px; font-size:12.5px; color:var(--ink-muted);">ຍັງບໍ່ມີຮູບ QR
+            ສຳລັບສະກຸນນີ້</div>
+          <button type="button" class="qr-dl-btn" id="payModalDlQrBtn" style="display:none; margin:10px auto 0;">ດາວໂຫລດ
+            QR</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="payAmountInput">ຈຳນວນເງິນ</label>
+        <div id="payQuickAmounts" class="chip-list" style="margin-bottom:8px;"></div>
+        <input type="number" min="1" step="1" class="mono" id="payAmountInput" placeholder="ຕົວຢ່າງ 30000">
+        <div class="err-msg" id="payErr">ໃສ່ຈຳນວນເງິນທີ່ຖືກຕ້ອງ (ຫລາຍກວ່າ 0)</div>
+      </div>
+      <button type="button" class="primary-btn" id="submitPayBtn"><span>ສົ່ງຄຳຂໍແຈ້ງໂອນເງິນ</span></button>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: ADD EXPENSE ============ -->
+  <div class="overlay" id="expOverlay" role="dialog" aria-modal="true" aria-labelledby="expModalTitle">
+    <div class="sheet">
+      <button type="button" class="close" data-close="expOverlay" aria-label="ປິດ">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" x2="6" y1="6" y2="18" />
+          <line x1="6" x2="18" y1="6" y2="18" />
+        </svg>
+      </button>
+      <h3 id="expModalTitle">ເພີ່ມລາຍການຄ່າໃຊ້ຈ່າຍ</h3>
+      <div class="field">
+        <label for="expDescInput">ລາຍລະອຽດ</label>
+        <input type="text" id="expDescInput" placeholder="ເຊັ່ນ ກະທ້ອມ">
+      </div>
+
+      <div class="field">
+        <label for="expCategorySelect">ໝວດໝູ່</label>
+        <select id="expCategorySelect">
+          <option value="food">ອາຫານ</option>
+          <option value="travel">ເຄື່ອງໃຊ້</option>
+          <option value="shopping">ສຳລີ</option>
+          <option value="event">ເຄື່ອງປຸງ</option>
+          <option value="other" selected>ຄ່າທ້ອມ</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>ໃຜອອກເງິນນຳແນ່ — ເພີ່ມໄດ້ຫລາຍຄົນ</label>
+        <div id="payerRows"></div>
+        <button type="button" class="ghost-btn" id="addPayerRowBtn" style="margin-top:4px;">+ ເພີ່ມຄົນອອກເງິນ</button>
+      </div>
+
+      <div class="summary-strip">
+        <div style="display:flex; justify-content:space-between; font-size:13.5px; font-weight:700; color:var(--ink);">
+          <span>ຍອດລວມ (ກີບ)</span>
+          <span class="mono" id="expTotalPreviewLAK">0 ກີບ</span>
+        </div>
+        <div
+          style="display:flex; justify-content:space-between; font-size:13.5px; font-weight:700; color:var(--ink-muted); margin-top:6px;">
+          <span>ຍອດລວມ (VND)</span>
+          <span class="mono" id="expTotalPreviewVND">0 VND</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>ຫານໃຜແນ່</label>
+        <div class="chip-list" id="expSplitChips"></div>
+      </div>
+      <div class="err-msg" id="expErr">ໃສ່ຂໍ້ມູນໃຫ້ຄົບ-ຖືກຕ້ອງ</div>
+      <button type="button" class="primary-btn" id="submitExpBtn"><span>ບັນທຶກລາຍການ</span></button>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: PARTIAL/CUSTOM APPROVE ============ -->
+  <div class="overlay" id="partialOverlay" role="dialog" aria-modal="true" aria-labelledby="partialModalHeading">
+    <div class="sheet">
+      <button type="button" class="close" data-close="partialOverlay" aria-label="ປິດ">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" x2="6" y1="6" y2="18" />
+          <line x1="6" x2="18" y1="6" y2="18" />
+        </svg>
+      </button>
+      <h3 id="partialModalHeading">ອະນຸມັດຍອດບາງສ່ວນ / ກຳນົດເອງ</h3>
+      <div class="field">
+        <label id="partialAmountLabel" for="partialAmountInput">ຍອດທີ່ຈະອະນຸມັດ (ກີບ)</label>
+        <input type="number" min="1" step="1" class="mono" id="partialAmountInput">
+      </div>
+      <button type="button" class="primary-btn" id="confirmPartialBtn"><span>ຢືນຢັນອະນຸມັດ</span></button>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: REJECT REASON ============ -->
+  <div class="overlay" id="rejectOverlay" role="dialog" aria-modal="true" aria-labelledby="rejectModalHeading">
+    <div class="sheet">
+      <button type="button" class="close" data-close="rejectOverlay" aria-label="ປິດ">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" x2="6" y1="6" y2="18" />
+          <line x1="6" x2="18" y1="6" y2="18" />
+        </svg>
+      </button>
+      <h3 id="rejectModalHeading">ປະຕິເສດຄຳຂໍ</h3>
+      <div class="field">
+        <label for="rejectReasonInput">ເຫດຜົນ</label>
+        <textarea id="rejectReasonInput" rows="3" placeholder="ໃສ່ເຫດຜົນ ເຊັ່ນ ຍອດບໍ່ກົງ"></textarea>
+      </div>
+      <button type="button" class="primary-btn" style="background:var(--coral);"
+        id="confirmRejectBtn"><span>ຢືນຢັນປະຕິເສດ</span></button>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: MEMBER DETAIL (breakdown + admin adjustment) ============ -->
+  <div class="overlay" id="memberDetailOverlay" role="dialog" aria-modal="true" aria-labelledby="memberDetailName">
+    <div class="sheet">
+      <button type="button" class="close" data-close="memberDetailOverlay" aria-label="ປິດ">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" x2="6" y1="6" y2="18" />
+          <line x1="6" x2="18" y1="6" y2="18" />
+        </svg>
+      </button>
+      <h3 id="memberDetailName" style="margin-bottom:4px;"></h3>
+      <p id="memberDetailBalance" class="mono"
+        style="font-size:14.5px; font-weight:700; margin:0 0 16px; line-height:1.6;"></p>
+
+      <div id="memberAdjustBox" class="card hidden" style="margin-bottom:16px; background:var(--bg); box-shadow:none;">
+        <div class="field" style="margin-bottom:10px;">
+          <label>ແອັດມິນ: ປັບຍອດເງິນໂດຍກົງ</label>
+          <div class="chip-list" style="margin-bottom:10px;">
+            <button type="button" class="chip on" id="adjustAddChip">ຫລຸດໜີ້ (+)</button>
+            <button type="button" class="chip" id="adjustSubChip">ເພີ່ມໜີ້ (-)</button>
+          </div>
+          <select id="adjustCurrencySelect" style="margin-bottom:8px;">
+            <option value="LAK">ກີບ (LAK)</option>
+            <option value="VND">ດົ່ງຫວຽດນາມ (VND)</option>
+          </select>
+          <input type="number" min="1" step="1" class="mono" id="adjustAmountInput" placeholder="ຈຳນວນເງິນ">
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <input type="text" id="adjustReasonInput" placeholder="ເຫດຜົນ (ບໍ່ບັງຄັບ) ເຊັ່ນ ແກ້ໄຂຍອດຜິດພາດ">
+        </div>
+        <div class="err-msg" id="adjustErr">ໃສ່ຈຳນວນເງິນໃຫ້ຖືກຕ້ອງ (ຫລາຍກວ່າ 0)</div>
+        <button type="button" class="primary-btn" id="submitAdjustBtn"><span>ບັນທຶກການປັບຍອດ</span></button>
+      </div>
+
+      <div class="section-head" style="margin-bottom:8px;">
+        <h2>ລາຍລະອຽດຄວາມເຄື່ອນໄຫວ</h2>
+      </div>
+      <div id="memberDetailList" class="card"
+        style="padding:4px 14px; margin-bottom:0; box-shadow:none; background:var(--bg);"></div>
+    </div>
+  </div>
+
+  <!-- ============ ADMIN PIN LOCK ============ -->
+  <div class="lock-screen hidden" id="pinLock" role="dialog" aria-modal="true" aria-label="ໂໝດແອັດມິນ">
+    <div class="lock-emblem" id="vaultLogoWrap">
+      <img id="vaultLogoImg" class="brand-logo-img" src="./logo.png" alt="ໂລໂກ້ເວັບໄຊ" style="display:none;">
+      <svg id="vaultLogoFallback" class="ico" style="width:26px; height:26px;" viewBox="0 0 24 24" aria-hidden="true">
+        <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      </svg>
+    </div>
+    <h3 style="margin:0; font-size:20px; font-weight:700;">ໂໝດແອັດມິນ</h3>
+    <p style="color:#C7C1B6; font-size:13px; margin:0 0 4px;">ໃສ່ລະຫັດ PIN ເພື່ອເຂົ້າສູ່ໂໝດຈັດການ</p>
+    <input type="password" id="pinInput" inputmode="numeric" maxlength="8" placeholder="••••" aria-label="ລະຫັດ PIN">
+    <div class="err-msg" id="pinErr" style="color:#FCA5A5; margin:0;">ລະຫັດບໍ່ຖືກຕ້ອງ</div>
+    <button type="button" class="primary-btn" id="pinSubmitBtn"><span>ເຂົ້າສູ່ລະບົບ</span></button>
+    <button type="button" class="ghost-btn" id="pinCancelBtn">ຍົກເລີກ</button>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    /* ================================================================
+       FIREBASE INIT
+       ---------------------------------------------------------------
+       👉 ປ່ຽນ config ລຸ່ມນີ້ດ້ວຍຄ່າຈາກໂປຣເຈັກ Firebase ຂອງທ່ານ
+       (Firebase Console > Project settings > SDK setup and configuration)
+       ໃຊ້ Realtime Database ເທົ່ານັ້ນ (ບໍ່ໃຊ້ Firebase Storage)
+       ================================================================ */
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "AIzaSyBUFJJsUYhXB5HIM3r7bOIp6tHrchi5UxE",
+      authDomain: "cosmo-b.firebaseapp.com",
+      databaseURL: "https://cosmo-b-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "cosmo-b",
+      storageBucket: "cosmo-b.firebasestorage.app",
+      messagingSenderId: "977636102498",
+      appId: "1:977636102498:web:a8b78d9a7177615e511c3b",
+      measurementId: "G-XJKJDGK7L7"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    /* Suggested Realtime Database security rules (paste in Firebase console):
+    {
+      "rules": {
+        "members":  { ".read": true, ".write": true },
+        "expenses": { ".read": true, ".write": true },
+        "payments": { ".read": true, ".write": true },
+        "logs":     { ".read": true, ".write": true, ".indexOn": ["ts"] },
+        "settings": { ".read": true, ".write": true }
+      }
+    }
+    NOTE: these open rules are fine for a small trusted friend-group demo. Since the
+    Admin PIN here is only a client-side UI gate (not real auth), do not use this
+    for anything beyond a casual private group — anyone with the DB URL could
+    technically write directly. For real protection, move PIN verification to
+    Firebase Auth + custom claims or Cloud Functions.
+    */
+
+    let state = {
+      members: {},      // id -> {name, balance}
+      expenses: {},      // id -> {...}
+      payments: {},      // id -> {...}
+      adjustments: {},   // id -> {memberId, delta, reason, ts} — admin manual balance corrections
+      settings: {},
+      isAdmin: false
+    };
+    let editingExpenseId = null;   // set while the expense modal is in "edit" mode
+    let settingsLoaded = false;    // guard against overwriting adminPin before initial load
+    let knownPaymentIds = null;    // null until first payments snapshot, then a Set of seen ids (for notifications)
+    let notifPermission = (typeof Notification !== 'undefined') ? Notification.permission : 'unsupported';
+    const pendingPaymentOps = new Set();
+    const pendingExpenseDeletes = new Set();
+    const VALID_PAYMENT_STATUSES = new Set(['pending', 'approved', 'partial', 'rejected']);
+
+    /* ---------------- helpers ---------------- */
+    function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+    function openSheet(id) { document.getElementById(id).classList.add('show'); }
+    function closeSheet(id) {
+      document.getElementById(id).classList.remove('show');
+      if (id === 'expOverlay') editingExpenseId = null;
+    }
+    document.querySelectorAll('[data-close]').forEach(b => {
+      b.addEventListener('click', () => closeSheet(b.dataset.close));
+    });
+    document.querySelectorAll('.overlay').forEach(ov => {
+      ov.addEventListener('click', (e) => {
+        if (e.target === ov) closeSheet(ov.id);
+      });
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const pinLock = document.getElementById('pinLock');
+      if (pinLock && !pinLock.classList.contains('hidden')) {
+        pinLock.classList.add('hidden');
+        return;
+      }
+      document.querySelectorAll('.overlay.show').forEach(ov => closeSheet(ov.id));
+    });
+    function setLoading(btn, loading, label) {
+      btn.disabled = loading;
+      btn.querySelector('span').innerHTML = loading ? '<span class="spinner"></span>' : label;
+    }
+    function requireAdmin() {
+      if (!state.isAdmin) { toast('ຕ້ອງເຂົ້າໂໝດແອັດມິນກ່ອນ'); return false; }
+      return true;
+    }
+    function membersArr() {
+      return Object.entries(state.members).map(([id, m]) => ({ id, ...m }));
+    }
+    function validAmount(v) {
+      if (v === '' || v === null || v === undefined) return null;
+      const n = Number(v);
+      if (!Number.isFinite(n) || n <= 0) return null;
+      return Math.round(n);
+    }
+
+    // === ເພີ່ມໂຄ້ດປັດເສດຕົງນີ້ ===
+    function roundUpToThousand(n) {
+      return Math.ceil(n / 1000) * 1000;
+    }
+    // =========================
+
+    /* ---------------- custom luxury duotone SVG icon set ---------------- */
+    const ADMIN_ICON_LOCKED = '<svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><path class="ico-fill" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="2"/><path d="M12 13v2.5"/></svg>';
+    const ADMIN_ICON_ACTIVE = '<svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><path class="ico-fill" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>';
+    const SETTLE_ARROW_SVG = '<span class="settle-arrow-ico" aria-hidden="true"><svg class="ico ico-sm" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>';
+
+    const CATEGORY_ICONS = {
+      // ອາຫານ — minimalist luxury cloche dome
+      food: '<svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><path class="ico-fill" d="M4 17a8 8 0 0 1 16 0Z"/><path d="M4 17a8 8 0 0 1 16 0"/><path d="M2 17h20"/><path d="M12 6v3"/><circle cx="12" cy="5" r="1"/></svg>',
+      // ເຄື່ອງໃຊ້ — minimalist hexagonal precision gear/cube
+      travel: '<svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><polygon class="ico-fill" points="12 3 20 7.5 20 16.5 12 21 4 16.5 4 7.5"/><polygon points="12 3 20 7.5 20 16.5 12 21 4 16.5 4 7.5"/><circle cx="12" cy="12" r="3"/></svg>',
+      // ສຳລີ — minimalist soft cloud tuft
+      shopping: '<svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><path class="ico-fill" d="M17.5 18H7a4 4 0 1 1 .9-7.9A5.5 5.5 0 0 1 18.6 11a3.5 3.5 0 0 1-1.1 7Z"/><path d="M17.5 18H7a4 4 0 1 1 .9-7.9A5.5 5.5 0 0 1 18.6 11a3.5 3.5 0 0 1-1.1 7Z"/></svg>',
+      // ເຄື່ອງປຸງ — minimalist apothecary bottle
+      event: '<svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><path class="ico-fill" d="M9 9h6l2 4v6a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-6l2-4Z"/><path d="M10 3h4v4l3 5v7a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-7l3-5V3Z"/><path d="M9 3h6"/><path d="M7.5 14h9"/></svg>',
+      // ຄ່າທ້ອມ — minimalist botanical leaf crest
+      other: '<svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><path class="ico-fill" d="M19 4C11 4 5 9.5 5 17.5c0 .8.1 1.6.3 2.2.6.2 1.4.3 2.2.3C15.5 20 20 14 19 4Z"/><path d="M19 4C11 4 5 9.5 5 17.5c0 .8.1 1.6.3 2.2.6.2 1.4.3 2.2.3C15.5 20 20 14 19 4Z"/><path d="M5 19 14 10"/></svg>'
+    };
+
+    const DETAIL_ICONS = {
+      paid: '<svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>',
+      split: '<svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.5 6.5"/></svg>',
+      surplus: '<svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 12 12 21 5 12 12 3Z"/></svg>',
+      transfer_in: '<svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+      transfer_out: '<svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 7 7 17"/><path d="M15 17H7V9"/></svg>',
+      collector_refund: '<svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>',
+      collector_receive: '<svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 7 7 17"/><path d="M15 17H7V9"/></svg>',
+      adjust: '<svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" x2="20" y1="8" y2="8"/><line x1="4" x2="20" y1="16" y2="16"/><circle cx="9" cy="8" r="2"/><circle cx="15" cy="16" r="2"/></svg>'
+    };
+
+    /* ---------------- multi-currency helpers (LAK + VND) ---------------- */
+    const CURRENCY_LABELS = { LAK: 'ກີບ', VND: 'VND' };
+    function fmtCcy(n, ccy) { return fmt(n) + ' ' + (CURRENCY_LABELS[ccy] || ccy); }
+    function balField(ccy) { return ccy === 'VND' ? 'balance_VND' : 'balance'; }
+    function balOf(member, ccy) { return Math.round((member && member[balField(ccy)]) || 0); }
+
+    /* ---------------- realtime listeners ---------------- */
+    db.ref('members').on('value', snap => { state.members = snap.val() || {}; renderAll(); });
+    db.ref('expenses').on('value', snap => { state.expenses = snap.val() || {}; renderAll(); });
+    db.ref('payments').on('value', snap => {
+      const newPayments = snap.val() || {};
+      checkForNewPendingRequests(newPayments);
+      state.payments = newPayments;
+      renderAll();
+    });
+    db.ref('settings').on('value', snap => { state.settings = snap.val() || {}; settingsLoaded = true; renderAll(); });
+    db.ref('adjustments').on('value', snap => {
+      state.adjustments = snap.val() || {};
+      if (!currentDetailMemberId || !document.getElementById('memberDetailOverlay').classList.contains('show')) return;
+      renderMemberDetailList(currentDetailMemberId);
+    });
+    db.ref('logs').limitToLast(60).on('value', snap => { renderLogs(snap.val() || {}); });
+
+    /* Fire a browser notification when a brand-new pending payment request shows up. */
+    function checkForNewPendingRequests(newPayments) {
+      const currentIds = new Set(Object.keys(newPayments));
+      if (knownPaymentIds === null) { knownPaymentIds = currentIds; return; } // first load: nothing to notify about
+      Object.entries(newPayments).forEach(([id, p]) => {
+        if (!knownPaymentIds.has(id) && p.status === 'pending' && notifPermission === 'granted') {
+          const fromName = state.members[p.from]?.name || 'ສະມາຊິກ';
+          try {
+            new Notification('ມີຄຳຂໍແຈ້ງໂອນເງິນໃໝ່', {
+              body: `${fromName} ແຈ້ງໂອນ ${fmtCcy(p.amountTransferred, p.currency === 'VND' ? 'VND' : 'LAK')}`,
+              tag: id
+            });
+          } catch (e) { /* Notification constructor can throw on some mobile browsers — ignore */ }
+        }
+      });
+      knownPaymentIds = currentIds;
+    }
+
+    /* ================================================================
+       INVITE / SHARE
+       ================================================================ */
+    document.getElementById('inviteQrImg').src =
+      'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(window.location.href);
+
+    document.getElementById('copyLinkBtn').addEventListener('click', async () => {
+      const url = window.location.href;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast('ຄັດລອກລິ້ງແລ້ວ 🔗');
+      } catch (e) {
+        // clipboard API unavailable/blocked — fall back to a manual prompt
+        prompt('ຄັດລອກລິ້ງນີ້ດ້ວຍມື:', url);
+      }
+    });
+
+    /* ================================================================
+       NOTIFICATIONS (admin: new pending payment requests)
+       ================================================================ */
+    document.getElementById('enableNotifBtn').addEventListener('click', async () => {
+      if (typeof Notification === 'undefined') { toast('ບຣາວເຊີນີ້ບໍ່ຮອງຮັບການແຈ້ງເຕືອນ'); return; }
+      const perm = await Notification.requestPermission();
+      notifPermission = perm;
+      if (perm === 'granted') toast('ເປີດການແຈ້ງເຕືອນແລ້ວ ✅');
+      else toast('ບໍ່ໄດ້ຮັບອະນຸຍາດການແຈ້ງເຕືອນ');
+    });
+
+    /* ---------------- audit log ---------------- */
+    function writeLog(message) {
+      db.ref('logs').push({
+        message,
+        role: state.isAdmin ? 'admin' : 'member',
+        ts: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+
+    /* ================================================================
+       RENDER
+       ================================================================ */
+    function renderAll() {
+      renderHero();
+      renderBalances();
+      renderSettlement();
+      renderQr();
+      renderExpenses();
+      renderCategoryChart();
+      renderPublicRequests();
+      if (state.isAdmin) {
+        renderMemberMgmt();
+        renderRequests();
+        renderCollectorSelect();
+      }
+      if (currentDetailMemberId && document.getElementById('memberDetailOverlay').classList.contains('show')) {
+        refreshMemberDetailHeader(currentDetailMemberId);
+        renderMemberDetailList(currentDetailMemberId);
+      }
+    }
+
+    function renderCollectorSelect() {
+      const sel = document.getElementById('collectorSelect');
+      const members = membersArr();
+      const current = state.settings.collectorMemberId;
+      sel.innerHTML = members.map(m => `<option value="${m.id}" ${m.id === current ? 'selected' : ''}>${escapeHtml(m.name)}</option>`).join('');
+    }
+
+    function renderHero() {
+      const exps = Object.values(state.expenses);
+      const calculatedTotalLAK = exps.reduce((s, e) => s + (e.amount_LAK ?? e.amount ?? 0), 0);
+      const calculatedTotalVND = exps.reduce((s, e) => s + (e.amount_VND || 0), 0);
+
+      let displayTotalLAK = calculatedTotalLAK;
+      let displayTotalVND = calculatedTotalVND;
+
+      const isLAKOverridden = state.settings.customTotalLAK !== undefined && state.settings.customTotalLAK !== null;
+      const isVNDOverridden = state.settings.customTotalVND !== undefined && state.settings.customTotalVND !== null;
+      if (isLAKOverridden) { displayTotalLAK = state.settings.customTotalLAK; }
+      if (isVNDOverridden) { displayTotalVND = state.settings.customTotalVND; }
+
+      document.getElementById('totalExpense').textContent = fmt(displayTotalLAK);
+      document.getElementById('totalExpenseVND').textContent = fmt(displayTotalVND);
+      document.getElementById('totalLAKOverrideBadge').classList.toggle('hidden', !isLAKOverridden);
+      document.getElementById('totalVNDOverrideBadge').classList.toggle('hidden', !isVNDOverridden);
+      document.getElementById('memberCountLabel').textContent = `ສະມາຊິກ ${membersArr().length} ຄົນ`;
+      document.getElementById('expenseCountLabel').textContent = `ລາຍການ ${exps.length} ລາຍການ`;
+
+      const inLAK = document.getElementById('customTotalInputLAK');
+      const inVND = document.getElementById('customTotalInputVND');
+      if (inLAK && document.activeElement !== inLAK) {
+        inLAK.value = (state.settings.customTotalLAK !== undefined && state.settings.customTotalLAK !== null) ? state.settings.customTotalLAK : '';
+      }
+      if (inVND && document.activeElement !== inVND) {
+        inVND.value = (state.settings.customTotalVND !== undefined && state.settings.customTotalVND !== null) ? state.settings.customTotalVND : '';
+      }
+    }
+
+    function renderBalances() {
+      const list = document.getElementById('balanceList');
+      const members = membersArr();
+      const collectorId = state.settings.collectorMemberId;
+      document.getElementById('balanceCount').textContent = members.length + ' ຄົນ';
+      if (members.length === 0) {
+        list.innerHTML = '<div class="empty">ຍັງບໍ່ມີສະມາຊິກ — ໃຫ້ແອັດມິນເພີ່ມສະມາຊິກກ່ອນ</div>';
+        return;
+      }
+      list.innerHTML = members
+        .sort((a, b) => (Math.abs(b.balance || 0) + Math.abs(b.balance_VND || 0)) - (Math.abs(a.balance || 0) + Math.abs(a.balance_VND || 0)))
+        .map(m => {
+          const balLAK = balOf(m, 'LAK');
+          const balVND = balOf(m, 'VND');
+          const isCollector = m.id === collectorId;
+          const isCleared = balLAK === 0 && balVND === 0;
+          const isPos = !isCleared && balLAK >= 0 && balVND >= 0;
+          const isNeg = !isCleared && balLAK <= 0 && balVND <= 0;
+          const tagText = isCollector ? 'ຜູ້ດູແລກອງກາງ' : isCleared ? 'ຍອດເຄຍແລ້ວ' : isPos ? 'ຖ້າຮັບເງິນ' : isNeg ? 'ຕ້ອງຈ່າຍ' : 'ປະສົມ';
+          const tagClass = isCollector ? 'collector' : isPos ? 'pos' : isNeg ? 'neg' : 'neutral';
+
+          // one currency-amount chip per currency that isn't zero (or LAK by default if both are zero)
+          const currencyChips = [];
+          if (balLAK !== 0 || balVND === 0) {
+            currencyChips.push(`<span class="amt mono ${balLAK >= 0 ? 'pos' : 'neg'}">${fmtCcy(Math.abs(balLAK), 'LAK')}</span>`);
+          }
+          if (balVND !== 0) {
+            currencyChips.push(`<span class="amt mono ${balVND >= 0 ? 'pos' : 'neg'}">${fmtCcy(Math.abs(balVND), 'VND')}</span>`);
+          }
+
+          const refundBtns = [];
+          if (state.isAdmin && !isCollector && collectorId) {
+            if (balLAK > 0) refundBtns.push(`<button type="button" class="pay-btn" data-refund="${m.id}" data-ccy="LAK">ຄືນເງິນ (ກີບ)</button>`);
+            if (balVND > 0) refundBtns.push(`<button type="button" class="pay-btn" data-refund="${m.id}" data-ccy="VND">ຄືນເງິນ (VND)</button>`);
+          }
+
+          return `<div class="balance-row" data-open-member="${m.id}" role="button" tabindex="0">
+        <span class="name">${escapeHtml(m.name)}</span>
+        <span style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+          <span class="tag ${tagClass}">${tagText}</span>
+          <span style="display:flex; flex-direction:column; align-items:flex-end; gap:2px;">${currencyChips.join('')}</span>
+          ${refundBtns.join('')}
+          <svg class="ico ico-sm" style="color:var(--ink-subtle);" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </span>
+      </div>`;
+        }).join('');
+      list.querySelectorAll('[data-refund]').forEach(b => {
+        b.addEventListener('click', (ev) => { ev.stopPropagation(); refundCreditor(b.dataset.refund, b.dataset.ccy); });
+      });
+      list.querySelectorAll('[data-open-member]').forEach(row => {
+        row.addEventListener('click', () => openMemberDetail(row.dataset.openMember));
+        row.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openMemberDetail(row.dataset.openMember); }
+        });
+      });
+    }
+
+    /* Admin: directly record that the collector refunded a creditor member, in a given currency. */
+    function refundCreditor(memberId, currency) {
+      if (!state.isAdmin) { toast('ຕ້ອງເຂົ້າໂໝດແອັດມິນກ່ອນ'); return; }
+      const ccy = currency === 'VND' ? 'VND' : 'LAK';
+      const field = balField(ccy);
+      const collectorId = state.settings.collectorMemberId;
+      const member = state.members[memberId];
+      if (!collectorId || !member) return;
+      const suggested = balOf(member, ccy);
+      const val = prompt(`ຄືນເງິນໃຫ້ ${member.name} ເທົ່າໃດ (${CURRENCY_LABELS[ccy]})?`, suggested);
+      if (val === null) return;
+      const amount = validAmount(val);
+      if (!amount) { toast('ຈຳນວນເງິນບໍ່ຖືກຕ້ອງ'); return; }
+
+      Promise.all([
+        db.ref('members/' + collectorId + '/' + field).transaction(cur => Math.round((cur || 0) + amount)),
+        db.ref('members/' + memberId + '/' + field).transaction(cur => Math.round((cur || 0) - amount))
+      ]).then(() => {
+        const collectorName = state.members[collectorId]?.name || '—';
+        return db.ref('payments').push({
+          from: collectorId, to: memberId, amountTransferred: amount, resolvedAmount: amount, currency: ccy,
+          status: 'approved', note: 'ຄືນເງິນຈາກກອງກາງ', ts: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => {
+          writeLog(`ກອງກາງ (${collectorName}) ໂອນຄືນໃຫ້ ${member.name} ຈຳນວນ ${fmtCcy(amount, ccy)}`);
+          toast('ບັນທຶກການຄືນເງິນແລ້ວ');
+        });
+      }).catch(() => toast('ເກີດຂໍ້ຜິດພາດ ລອງໃໝ່ອີກຄັ້ງ'));
+    }
+
+    /* ================================================================
+       MEMBER DETAIL: breakdown of what makes up someone's balance,
+       plus (admin-only) a direct balance adjustment tool.
+       ================================================================ */
+    let adjustSign = 1; // 1 = add, -1 = subtract
+    let currentDetailMemberId = null;
+
+    /* Renders just the name + balance header of the member-detail modal.
+       Called both when opening it and on every live data update while it's open,
+       so the figures never go stale while the admin is looking at it. */
+    function refreshMemberDetailHeader(memberId) {
+      const member = state.members[memberId];
+      if (!member) return;
+
+      document.getElementById('memberDetailName').textContent = member.name;
+      const balEl = document.getElementById('memberDetailBalance');
+
+      // เช็คว่าคนที่กำลังเปิดดูคือผู้ดูแลกองกลาง (Admin) หรือไม่
+      const isCollector = memberId === state.settings.collectorMemberId;
+
+      function lineFor(bal, ccy) {
+        if (bal === 0) return null;
+        if (bal > 0) {
+          return { text: (isCollector ? 'ລໍຖ້າຮັບເງິນຈາກສະມາຊິກ: ' : 'ຖ້າຮັບຄືນຈາກແອັດມິນ: ') + fmtCcy(bal, ccy), color: 'var(--ok)' };
+        }
+        return { text: (isCollector ? 'ຕ້ອງຈ່າຍຄືນສະມາຊິກ: ' : 'ຕິດໜີ້ແອັດມິນ: ') + fmtCcy(Math.abs(bal), ccy), color: 'var(--coral)' };
+      }
+
+      const lakLine = lineFor(balOf(member, 'LAK'), 'LAK');
+      const vndLine = lineFor(balOf(member, 'VND'), 'VND');
+      const lines = [lakLine, vndLine].filter(Boolean);
+
+      if (lines.length === 0) {
+        balEl.innerHTML = 'ຍອດເຄຍແລ້ວ (0 ກີບ)';
+        balEl.style.color = 'var(--ink)';
+      } else {
+        balEl.innerHTML = lines.map(l => `<span style="color:${l.color};">${l.text}</span>`).join('<br>');
+      }
+    }
+
+    function openMemberDetail(memberId) {
+      const member = state.members[memberId];
+      if (!member) return;
+      currentDetailMemberId = memberId;
+
+      refreshMemberDetailHeader(memberId);
+
+      const adjustBox = document.getElementById('memberAdjustBox');
+      if (state.isAdmin) {
+        adjustBox.classList.remove('hidden');
+        document.getElementById('adjustAmountInput').value = '';
+        document.getElementById('adjustReasonInput').value = '';
+        document.getElementById('adjustCurrencySelect').value = 'LAK';
+        document.getElementById('adjustErr').classList.remove('show');
+        setAdjustSign(1);
+      } else {
+        adjustBox.classList.add('hidden');
+      }
+
+      renderMemberDetailList(memberId);
+      openSheet('memberDetailOverlay');
+    }
+
+    /* Lao date format (Christian Era year as used in Laos, e.g. ວັນຈັນ 07 ຕຸລາ 2026 · 14:30) */
+    function formatLaoDate(ts) {
+      if (!ts) return '';
+      const d = new Date(ts);
+      const laoDays = ['ວັນອາທິດ', 'ວັນຈັນ', 'ວັນອັງຄານ', 'ວັນພຸດ', 'ວັນພະຫັດ', 'ວັນສຸກ', 'ວັນເສົາ'];
+      const laoMonths = ['ມັງກອນ', 'ກຸມພາ', 'ມີນາ', 'ເມສາ', 'ພຶດສະພາ', 'ມິຖຸນາ',
+        'ກໍລະກົດ', 'ສິງຫາ', 'ກັນຍາ', 'ຕຸລາ', 'ພະຈິກ', 'ທັນວາ'];
+      const dayName = laoDays[d.getDay()];
+      const dd = String(d.getDate()).padStart(2, '0');
+      const monthName = laoMonths[d.getMonth()];
+      const year = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      return `${dayName} ${dd} ${monthName} ${year} · ${hh}:${mi}`;
+    }
+
+    function renderMemberDetailList(memberId) {
+      const list = document.getElementById('memberDetailList');
+      const entries = [];
+      const isCollector = memberId === state.settings.collectorMemberId;
+
+      Object.entries(state.expenses).forEach(([id, e]) => {
+        const payers = e.payers || (e.paidBy ? [{ memberId: e.paidBy, amount: e.amount, currency: 'LAK' }] : []);
+        payers.filter(p => p.memberId === memberId).forEach(myPay => {
+          // ควักเงินออกไปก่อน = ยอดสะสมเพิ่มขึ้น (+)
+          entries.push({ ts: e.ts, label: `${e.description || '-'}`, amount: myPay.amount, currency: myPay.currency || 'LAK', positive: true, type: 'paid' });
+        });
+        if ((e.splitAmong || []).includes(memberId)) {
+          // ร่วมหารด้วย = ยอดสะสมลดลง (-) — แยกทีละสกุลเงินที่บิลนี้มี
+          const shareLAK = (e.splitShares && e.splitShares[memberId] !== undefined) ? e.splitShares[memberId] : (e.perPerson || 0);
+          const shareVND = (e.splitShares_VND && e.splitShares_VND[memberId] !== undefined) ? e.splitShares_VND[memberId] : 0;
+          if (shareLAK) entries.push({ ts: e.ts, label: `${e.description || '-'}`, amount: shareLAK, currency: 'LAK', positive: false, type: 'split' });
+          if (shareVND) entries.push({ ts: e.ts, label: `${e.description || '-'}`, amount: shareVND, currency: 'VND', positive: false, type: 'split' });
+        }
+        // เศษปัดขึ้นที่ตกเป็นของกองกลาง (แสดงในประวัติของผู้ดูแลกองกลางเพื่อให้ผลรวมตรงกับยอดจริง)
+        const surplusTarget = e.collectorMemberId !== undefined ? e.collectorMemberId : state.settings.collectorMemberId;
+        if (surplusTarget && surplusTarget === memberId) {
+          if (e.roundingSurplus > 0) {
+            entries.push({ ts: e.ts, label: `${e.description || '-'}`, amount: e.roundingSurplus, currency: 'LAK', positive: true, type: 'surplus' });
+          }
+          if (e.roundingSurplus_VND > 0) {
+            entries.push({ ts: e.ts, label: `${e.description || '-'}`, amount: e.roundingSurplus_VND, currency: 'VND', positive: true, type: 'surplus' });
+          }
+        }
+      });
+
+      Object.values(state.payments).forEach(p => {
+        if (p.status !== 'approved' && p.status !== 'partial') return;
+        const ccy = p.currency === 'VND' ? 'VND' : 'LAK';
+        const amt = p.resolvedAmount !== undefined ? p.resolvedAmount : p.amountTransferred;
+        if (p.from === memberId) {
+          const toName = state.members[p.to]?.name || 'ສະມາຊິກ';
+          entries.push({
+            ts: p.ts,
+            label: isCollector ? `ຄືນເງິນໃຫ້ ${toName}` : 'ແຈ້ງໂອນເງິນສຳເລັດ',
+            amount: amt,
+            currency: ccy,
+            positive: true,
+            type: isCollector ? 'collector_refund' : 'transfer_in'
+          });
+        }
+        if (p.to === memberId) {
+          const fromName = state.members[p.from]?.name || 'ສະມາຊິກ';
+          entries.push({
+            ts: p.ts,
+            label: isCollector ? `ຮັບໂອນຈາກ ${fromName}` : 'ຮັບເງິນຄືນແລ້ວ',
+            amount: amt,
+            currency: ccy,
+            positive: false,
+            type: isCollector ? 'collector_receive' : 'transfer_out'
+          });
+        }
+      });
+
+      Object.values(state.adjustments || {}).forEach(a => {
+        if (a.memberId !== memberId) return;
+        entries.push({ ts: a.ts, label: `${a.reason ? a.reason : 'ແກ້ໄຂຍອດ'}`, amount: Math.abs(a.delta), currency: a.currency === 'VND' ? 'VND' : 'LAK', positive: a.delta >= 0, type: 'adjust' });
+      });
+
+      entries.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+      if (entries.length === 0) { list.innerHTML = '<div class="empty">ຍັງບໍ່ມີຄວາມເຄື່ອນໄຫວ</div>'; return; }
+
+      list.innerHTML = entries.map(en => {
+        const d = formatLaoDate(en.ts);
+        let badgeHtml = '';
+        let statusClass = en.positive ? 'pos' : 'neg';
+        let sign = en.positive ? '+' : '-';
+
+        if (en.type === 'paid') {
+          badgeHtml = `<span class="tag pos tag-ico">${DETAIL_ICONS.paid}<span>ອອກເງິນໃຫ້ກ່ອນ</span></span>`;
+        } else if (en.type === 'split') {
+          badgeHtml = `<span class="tag neg tag-ico">${DETAIL_ICONS.split}<span>ຮ່ວມຫານບິນນີ້</span></span>`;
+        } else if (en.type === 'surplus') {
+          badgeHtml = `<span class="tag collector tag-ico">${DETAIL_ICONS.surplus}<span>ເສດປັດຂຶ້ນ (ກອງກາງ)</span></span>`;
+        } else if (en.type === 'transfer_in') {
+          badgeHtml = `<span class="tag pos tag-ico">${DETAIL_ICONS.transfer_in}<span>ຈ່າຍເຂົ້າກອງກາງ</span></span>`;
+        } else if (en.type === 'transfer_out') {
+          badgeHtml = `<span class="tag neg tag-ico">${DETAIL_ICONS.transfer_out}<span>ຮັບເງິນຄືນແລ້ວ</span></span>`;
+        } else if (en.type === 'collector_refund') {
+          badgeHtml = `<span class="tag pos tag-ico">${DETAIL_ICONS.collector_refund}<span>ໂອນຄືນໃຫ້ສະມາຊິກ</span></span>`;
+        } else if (en.type === 'collector_receive') {
+          badgeHtml = `<span class="tag neg tag-ico">${DETAIL_ICONS.collector_receive}<span>ຮັບເງິນໂອນເຂົ້າກອງກາງ</span></span>`;
+        } else if (en.type === 'adjust') {
+          badgeHtml = `<span class="tag neutral tag-ico">${DETAIL_ICONS.adjust}<span>ແອັດມິນປັບຍອດ</span></span>`;
+        }
+        badgeHtml += ` <span class="tag neutral">${escapeHtml(CURRENCY_LABELS[en.currency] || en.currency)}</span>`;
+
+        return `<div class="expense-row" style="align-items: center; padding: 14px 0; border-bottom: 1px dashed var(--line);">
+      <div style="flex: 1; min-width: 0; padding-right: 10px;">
+        <div style="margin-bottom: 6px; display:flex; flex-wrap:wrap; gap:5px;">${badgeHtml}</div>
+        <div class="desc" style="font-size:14px; font-weight: 600; color: var(--ink);">${escapeHtml(en.label)}</div>
+        <div class="meta" style="font-size: 11.5px;">${d}</div>
+      </div>
+      <div class="amt mono ${statusClass}" style="font-size: 15px; font-weight: 700; white-space:nowrap;">${sign}${fmtCcy(en.amount, en.currency)}</div>
+    </div>`;
+      }).join('');
+    }
+
+    function setAdjustSign(sign) {
+      adjustSign = sign;
+      document.getElementById('adjustAddChip').classList.toggle('on', sign === 1);
+      document.getElementById('adjustSubChip').classList.toggle('on', sign === -1);
+    }
+    document.getElementById('adjustAddChip').addEventListener('click', () => setAdjustSign(1));
+    document.getElementById('adjustSubChip').addEventListener('click', () => setAdjustSign(-1));
+
+    document.getElementById('submitAdjustBtn').addEventListener('click', () => {
+      if (!requireAdmin()) return;
+      const btn = document.getElementById('submitAdjustBtn');
+      const errEl = document.getElementById('adjustErr');
+      const amount = validAmount(document.getElementById('adjustAmountInput').value);
+      const reason = document.getElementById('adjustReasonInput').value.trim();
+      const memberId = currentDetailMemberId;
+      const member = state.members[memberId];
+      const ccy = document.getElementById('adjustCurrencySelect').value === 'VND' ? 'VND' : 'LAK';
+      if (!amount || !member) {
+        errEl.classList.add('show');
+        return;
+      }
+      errEl.classList.remove('show');
+      const delta = amount * adjustSign;
+      setLoading(btn, true, 'ບັນທຶກການປັບຍອດ');
+
+      db.ref('members/' + memberId + '/' + balField(ccy)).transaction(cur => Math.round((cur || 0) + delta))
+        .then(() => db.ref('adjustments').push({ memberId, delta, currency: ccy, reason, ts: firebase.database.ServerValue.TIMESTAMP }))
+        .then(() => {
+          writeLog(`ແອັດມິນປັບຍອດຂອງ ${member.name} ${delta >= 0 ? '+' : ''}${fmtCcy(delta, ccy)}${reason ? ' (' + reason + ')' : ''}`);
+          toast('ບັນທຶກການປັບຍອດແລ້ວ');
+          document.getElementById('adjustAmountInput').value = '';
+          document.getElementById('adjustReasonInput').value = '';
+        })
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ ລອງໃໝ່ອີກຄັ້ງ'))
+        .finally(() => setLoading(btn, false, 'ບັນທຶກການປັບຍອດ'));
+    });
+    /* Hub model: everyone settles through the designated collector (Admin),
+       not with each other directly. Debtors -> collector, collector -> creditors. */
+    function renderSettlement() {
+      const inList = document.getElementById('settleInList');
+      const outList = document.getElementById('settleOutList');
+      const collectorId = state.settings.collectorMemberId;
+      const collector = state.members[collectorId];
+
+      if (!collectorId || !collector) {
+        const msg = '<div class="empty">ຍັງບໍ່ໄດ້ຕັ້ງຄ່າ "ຜູ້ດູແລກອງກາງ" — ໃຫ້ແອັດມິນຕັ້ງຄ່າກ່ອນໃນໂໝດແອັດມິນ</div>';
+        inList.innerHTML = msg; outList.innerHTML = msg;
+        return;
+      }
+
+      const members = membersArr().filter(m => m.id !== collectorId);
+      const debtRows = [], creditRows = [];
+      members.forEach(m => {
+        ['LAK', 'VND'].forEach(ccy => {
+          const bal = balOf(m, ccy);
+          if (bal < 0) debtRows.push({ m, ccy, amt: Math.abs(bal) });
+          if (bal > 0) creditRows.push({ m, ccy, amt: bal });
+        });
+      });
+
+      inList.innerHTML = debtRows.length === 0
+        ? '<div class="empty">ບໍ່ມີຄົນໃດຕິດຄ້າງກັບຜູ້ດູແລ</div>'
+        : debtRows.map(r => `
+      <div class="settle-item">
+        <span class="settle-names">${escapeHtml(r.m.name)}${SETTLE_ARROW_SVG}${escapeHtml(collector.name)}</span>
+        <span class="settle-amt mono">${fmtCcy(r.amt, r.ccy)}</span>
+      </div>`).join('');
+
+      outList.innerHTML = creditRows.length === 0
+        ? '<div class="empty">ຜູ້ດູແລບໍ່ໄດ້ຄ້າງເງິນໃຜ</div>'
+        : creditRows.map(r => `
+      <div class="settle-item">
+        <span class="settle-names">${escapeHtml(collector.name)}${SETTLE_ARROW_SVG}${escapeHtml(r.m.name)}</span>
+        <span class="settle-amt mono">${fmtCcy(r.amt, r.ccy)}</span>
+      </div>`).join('');
+    }
+
+    function bindQrImageHandlers(imgEl, emptyEl, dlBtnEl, emptyDefaultMsg) {
+      if (!imgEl || imgEl.dataset.qrBound) return;
+      imgEl.dataset.qrBound = '1';
+      imgEl.addEventListener('load', () => {
+        if (!imgEl.getAttribute('src')) return;
+        imgEl.style.display = 'block';
+        if (dlBtnEl) dlBtnEl.style.display = 'inline-flex';
+        if (emptyEl) emptyEl.style.display = 'none';
+      });
+      imgEl.addEventListener('error', () => {
+        if (!imgEl.getAttribute('src')) return;
+        imgEl.style.display = 'none';
+        if (dlBtnEl) dlBtnEl.style.display = 'none';
+        if (emptyEl) {
+          emptyEl.textContent = 'ຮູບ QR ໂຫລດບໍ່ໄດ້ ຫລື ລິ້ງໝົດອາຍຸ — ແອັດມິນສາມາດອັບໂຫລດຮູບໃໝ່ໄດ້ໃນໂໝດແອັດມິນ';
+          emptyEl.style.display = 'block';
+        }
+      });
+      imgEl._emptyDefaultMsg = emptyDefaultMsg;
+    }
+
+    function applyQrDisplay(imgEl, emptyEl, dlBtnEl, url, emptyMsg) {
+      bindQrImageHandlers(imgEl, emptyEl, dlBtnEl, emptyMsg);
+      if (url) {
+        if (imgEl.getAttribute('src') !== url) {
+          imgEl.style.display = 'none';
+          if (dlBtnEl) dlBtnEl.style.display = 'none';
+          if (emptyEl) { emptyEl.textContent = 'ກຳລັງໂຫລດຮູບ QR...'; emptyEl.style.display = 'block'; }
+          imgEl.src = url;
+        } else if (imgEl.complete && imgEl.naturalWidth > 0) {
+          imgEl.style.display = 'block';
+          if (dlBtnEl) dlBtnEl.style.display = 'inline-flex';
+          if (emptyEl) emptyEl.style.display = 'none';
+        }
+      } else {
+        imgEl.removeAttribute('src');
+        imgEl.style.display = 'none';
+        if (dlBtnEl) dlBtnEl.style.display = 'none';
+        if (emptyEl) { emptyEl.textContent = emptyMsg; emptyEl.style.display = 'block'; }
+      }
+    }
+
+    function renderQr() {
+      // === LAK QR ===
+      const url = state.settings.qrImageUrl;
+      applyQrDisplay(
+        document.getElementById('qrImg'),
+        document.getElementById('qrEmpty'),
+        document.getElementById('downloadQrBtn'),
+        url,
+        'ຍັງບໍ່ມີຮູບ QR ກີບ — ແອັດມິນສາມາດເພີ່ມຮູບໄດ້ໃນໂໝດແອັດມິນ'
+      );
+      const qrInLAK = document.getElementById('qrUrlInput');
+      if (qrInLAK && document.activeElement !== qrInLAK && qrInLAK.dataset.dirty !== '1') {
+        qrInLAK.value = url || '';
+      }
+
+      // === VND QR ===
+      const urlVND = state.settings.qrImageUrlVND;
+      applyQrDisplay(
+        document.getElementById('qrImgVND'),
+        document.getElementById('qrEmptyVND'),
+        document.getElementById('downloadQrVNDBtn'),
+        urlVND,
+        'ຍັງບໍ່ມີຮູບ QR VND — ແອັດມິນສາມາດເພີ່ມຮູບໄດ້ໃນໂໝດແອັດມິນ'
+      );
+      const qrInVND = document.getElementById('qrUrlInputVND');
+      if (qrInVND && document.activeElement !== qrInVND && qrInVND.dataset.dirty !== '1') {
+        qrInVND.value = urlVND || '';
+      }
+    }
+
+    document.getElementById('qrUrlInput').addEventListener('input', (e) => { e.target.dataset.dirty = '1'; });
+    document.getElementById('qrUrlInputVND').addEventListener('input', (e) => { e.target.dataset.dirty = '1'; });
+
+    function renderExpenses() {
+      const list = document.getElementById('expenseList');
+      const searchTerm = (document.getElementById('expenseSearchInput').value || '').trim().toLowerCase();
+      let exps = Object.entries(state.expenses).sort((a, b) => (b[1].ts || 0) - (a[1].ts || 0));
+
+      if (searchTerm) {
+        exps = exps.filter(([id, e]) => {
+          const payers = e.payers || (e.paidBy ? [{ memberId: e.paidBy }] : []);
+          const payerNames = payers.map(p => state.members[p.memberId]?.name || '').join(' ').toLowerCase();
+          const payerNotes = payers.map(p => p.note || '').join(' ').toLowerCase();
+          const splitMemberNames = (e.splitAmong || []).map(mid => state.members[mid]?.name || '').join(' ').toLowerCase();
+          const catText = (CATEGORY_LABELS[e.category] || '').toLowerCase();
+          return (e.description || '').toLowerCase().includes(searchTerm)
+            || payerNames.includes(searchTerm)
+            || payerNotes.includes(searchTerm)
+            || splitMemberNames.includes(searchTerm)
+            || catText.includes(searchTerm);
+        });
+      }
+
+      document.getElementById('expListCount').textContent = exps.length + ' ລາຍການ';
+      if (exps.length === 0) { list.innerHTML = '<div class="empty">ບໍ່ພົບລາຍການຄ່າໃຊ້ຈ່າຍ</div>'; return; }
+      list.innerHTML = exps.map(([id, e]) => {
+        const payers = e.payers || (e.paidBy ? [{ memberId: e.paidBy, amount: e.amount, currency: 'LAK' }] : []); // back-compat
+        const payerLines = payers.map(p => {
+          const nm = state.members[p.memberId]?.name || '—';
+          const noteStr = p.note ? ' · ' + escapeHtml(p.note) : '';
+          return `<div style="padding:2px 0 2px 8px; font-size:12.5px; color:var(--ink-muted);">- ${escapeHtml(nm)} (${fmtCcy(p.amount, p.currency || 'LAK')}${noteStr})</div>`;
+        }).join('');
+        const splitNames = (e.splitAmong || []).map(mid => escapeHtml(state.members[mid]?.name || '—')).join(', ');
+        const catLabel = CATEGORY_LABELS[e.category] || '';
+        const catIcon = CATEGORY_ICONS[e.category] || CATEGORY_ICONS.other;
+        const amtLAK = e.amount_LAK ?? e.amount ?? 0;
+        const amtVND = e.amount_VND || 0;
+        const amtSummary = [amtLAK > 0 ? fmtCcy(amtLAK, 'LAK') : null, amtVND > 0 ? fmtCcy(amtVND, 'VND') : null].filter(Boolean).join(' + ') || fmtCcy(0, 'LAK');
+        const actions = state.isAdmin ? `
+      <div class="exp-actions">
+        <button type="button" class="exp-edit-btn" data-edit-exp="${id}">ແກ້ໄຂ</button>
+        <button type="button" class="exp-del-btn" data-del-exp="${id}">ລົບ</button>
+      </div>` : '';
+        return `<div class="expense-row" style="flex-direction:column; align-items:stretch;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+        <div class="desc">${catLabel ? '<span class="tag neutral tag-ico" style="margin-right:6px;">' + catIcon + '<span>' + escapeHtml(catLabel.trim()) + '</span></span>' : ''}${escapeHtml(e.description || '-')}</div>
+        <div class="amt mono" style="text-align:right; white-space:nowrap; flex-shrink:0;">${amtSummary}</div>
+      </div>
+      <div class="meta" style="margin-top:5px;">${formatLaoDate(e.ts)}</div>
+      <div style="margin-top:6px;">
+        <div class="meta" style="font-weight:600; color:var(--ink); margin-bottom:2px;">ອອກເງິນກ່ອນ:</div>
+        ${payerLines || '<div style="padding:2px 0 2px 8px; font-size:12.5px; color:var(--ink-muted);">—</div>'}
+      </div>
+      <div class="meta" style="margin-top:5px;">ຫານກັບ: ${splitNames || '—'}</div>
+      ${actions}
+    </div>`;
+      }).join('');
+
+      list.querySelectorAll('[data-edit-exp]').forEach(b => b.addEventListener('click', () => openEditExpense(b.dataset.editExp)));
+      list.querySelectorAll('[data-del-exp]').forEach(b => b.addEventListener('click', () => deleteExpense(b.dataset.delExp, b)));
+    }
+    document.getElementById('expenseSearchInput').addEventListener('input', renderExpenses);
+
+    function renderMemberMgmt() {
+      const list = document.getElementById('memberMgmtList');
+      const members = membersArr();
+      if (members.length === 0) { list.innerHTML = '<div class="empty">ຍັງບໍ່ມີສະມາຊິກ</div>'; return; }
+      list.innerHTML = members.map(m => {
+        const bLAK = balOf(m, 'LAK');
+        const bVND = balOf(m, 'VND');
+        const balParts = [fmtCcy(bLAK, 'LAK')];
+        if (bVND !== 0) balParts.push(fmtCcy(bVND, 'VND'));
+        return `
+    <div class="member-pill">
+      <span>${escapeHtml(m.name)} <span class="mono" style="color:var(--ink-muted); font-size:12px;">(${balParts.join(' · ')})</span></span>
+      <button type="button" class="del-x" data-del-member="${m.id}" aria-label="ລົບສະມາຊິກ">✕</button>
+    </div>`;
+      }).join('');
+      list.querySelectorAll('[data-del-member]').forEach(btn => {
+        btn.addEventListener('click', () => deleteMember(btn.dataset.delMember));
+      });
+    }
+
+    function renderRequests() {
+      const list = document.getElementById('requestList');
+      const entries = Object.entries(state.payments).sort((a, b) => (b[1].ts || 0) - (a[1].ts || 0));
+      document.getElementById('reqCount').textContent = entries.filter(([, p]) => p.status === 'pending').length + ' ລໍຖ້າດຳເນີນການ';
+      if (entries.length === 0) { list.innerHTML = '<div class="card empty">ຍັງບໍ່ມີຄຳຂໍແຈ້ງໂອນ</div>'; return; }
+      list.innerHTML = entries.map(([id, p]) => {
+        const fromName = state.members[p.from]?.name || '—';
+        const toName = state.members[p.to]?.name || '—';
+        const pillClass = VALID_PAYMENT_STATUSES.has(p.status) ? p.status : '';
+        const pillText = { pending: 'ລໍຖ້າກວດສອບ', approved: 'ອະນຸມັດແລ້ວ', partial: 'ອະນຸມັດບາງສ່ວນ', rejected: 'ປະຕິເສດ' }[p.status] || escapeHtml(p.status || '—');
+        const ccy = p.currency === 'VND' ? 'VND' : 'LAK';
+        const amtText = Number.isFinite(Number(p.amountTransferred)) ? fmtCcy(p.amountTransferred, ccy) : '—';
+        const resolvedText = (p.resolvedAmount !== undefined && Number.isFinite(Number(p.resolvedAmount))) ? ` · ອະນຸມັດຈິງ ${fmtCcy(p.resolvedAmount, ccy)}` : '';
+        const actions = p.status === 'pending' ? `
+      <div class="req-actions">
+        <button type="button" class="act-full" data-full="${id}">✓ Full</button>
+        <button type="button" class="act-partial" data-partial="${id}">± Partial</button>
+        <button type="button" class="act-reject" data-reject="${id}">✕ Reject</button>
+      </div>` : (p.status === 'rejected' && p.rejectReason ? `<div class="meta" style="font-size:11.5px; color:var(--ink-muted);">ເຫດຜົນ: ${escapeHtml(p.rejectReason)}</div>` : '');
+        return `<div class="card req-card">
+      <div class="top">
+        <span class="who">${escapeHtml(fromName)} → ${escapeHtml(toName)}</span>
+        <span class="status-pill ${pillClass}">${pillText}</span>
+      </div>
+      <div class="num mono">ແຈ້ງໂອນ ${amtText}${resolvedText}</div>
+      ${actions}
+    </div>`;
+      }).join('');
+
+      list.querySelectorAll('[data-full]').forEach(b => b.addEventListener('click', () => approvePayment(b.dataset.full, 'full', undefined, b)));
+      list.querySelectorAll('[data-partial]').forEach(b => b.addEventListener('click', () => openPartialModal(b.dataset.partial)));
+      list.querySelectorAll('[data-reject]').forEach(b => b.addEventListener('click', () => openRejectModal(b.dataset.reject)));
+    }
+
+    /* Public view of payment requests (no login system exists, so this is visible
+       to everyone — consistent with the "no security needed, friend group" model).
+       Anyone can cancel a request that is still pending, e.g. if they made a mistake. */
+    function renderPublicRequests() {
+      const list = document.getElementById('publicRequestList');
+      const entries = Object.entries(state.payments).sort((a, b) => (b[1].ts || 0) - (a[1].ts || 0)).slice(0, 20);
+      const pendingCount = Object.values(state.payments).filter(p => p.status === 'pending').length;
+      document.getElementById('publicReqCount').textContent = pendingCount + ' ລໍຖ້າ';
+      if (entries.length === 0) { list.innerHTML = '<div class="empty">ຍັງບໍ່ມີຄຳຂໍແຈ້ງໂອນ</div>'; return; }
+      list.innerHTML = entries.map(([id, p]) => {
+        const fromName = state.members[p.from]?.name || '—';
+        const toName = state.members[p.to]?.name || '—';
+        const pillClass = VALID_PAYMENT_STATUSES.has(p.status) ? p.status : '';
+        const pillText = { pending: 'ລໍຖ້າກວດສອບ', approved: 'ອະນຸມັດແລ້ວ', partial: 'ອະນຸມັດບາງສ່ວນ', rejected: 'ປະຕິເສດ' }[p.status] || escapeHtml(p.status || '—');
+        const ccy = p.currency === 'VND' ? 'VND' : 'LAK';
+        const amtText = Number.isFinite(Number(p.amountTransferred)) ? fmtCcy(p.amountTransferred, ccy) : '—';
+        const cancelBtn = p.status === 'pending' ? `<button class="cancel-req-btn" data-cancel="${id}">ຍົກເລີກຄຳຂໍນີ້</button>` : '';
+        return `<div style="padding:10px 0; border-bottom:1px solid var(--line);">
+      <div class="top" style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="who" style="font-size:13px; font-weight:600;">${escapeHtml(fromName)} → ${escapeHtml(toName)}</span>
+        <span class="status-pill ${pillClass}">${pillText}</span>
+      </div>
+      <div class="num mono" style="font-size:12px; color:var(--ink-muted); margin-top:3px;">${amtText}</div>
+      ${cancelBtn}
+    </div>`;
+      }).join('');
+      list.querySelectorAll('[data-cancel]').forEach(b => {
+        b.addEventListener('click', () => cancelRequest(b.dataset.cancel));
+      });
+    }
+
+    function cancelRequest(id) {
+      const p = state.payments[id];
+      if (!p || p.status !== 'pending') return;
+      if (!confirm('ຍົກເລີກຄຳຂໍແຈ້ງໂອນນີ້ບໍ?')) return;
+      db.ref('payments/' + id).remove()
+        .then(() => { writeLog(`ຍົກເລີກຄຳຂໍແຈ້ງໂອນຂອງ ${state.members[p.from]?.name || ''}`); toast('ຍົກເລີກແລ້ວ'); })
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'));
+    }
+
+    /* Simple CSS-based horizontal bar chart summarizing spend by category. */
+    const CATEGORY_LABELS = { food: 'ອາຫານ', travel: 'ເຄື່ອງໃຊ້', shopping: 'ສຳລີ', event: 'ເຄື່ອງປຸງ', other: 'ຄ່າທ້ອມ' };
+    function renderCategoryChart() {
+      const wrap = document.getElementById('categoryChart');
+      const totalsLAK = {}, totalsVND = {};
+      Object.values(state.expenses).forEach(e => {
+        const cat = e.category || 'other';
+        const lak = e.amount_LAK ?? e.amount ?? 0;
+        const vnd = e.amount_VND || 0;
+        if (lak) totalsLAK[cat] = (totalsLAK[cat] || 0) + lak;
+        if (vnd) totalsVND[cat] = (totalsVND[cat] || 0) + vnd;
+      });
+      const entriesLAK = Object.entries(totalsLAK).sort((a, b) => b[1] - a[1]);
+      const entriesVND = Object.entries(totalsVND).sort((a, b) => b[1] - a[1]);
+
+      if (entriesLAK.length === 0 && entriesVND.length === 0) { wrap.innerHTML = '<div class="empty">ຍັງບໍ່ມີຂໍ້ມູນລາຍຈ່າຍ</div>'; return; }
+
+      function bars(entries, ccy) {
+        if (entries.length === 0) return '';
+        const max = Math.max(...entries.map(([, v]) => v));
+        return entries.map(([cat, val]) => {
+          const pct = max > 0 ? Math.round((val / max) * 100) : 0;
+          const catIcon = CATEGORY_ICONS[cat] || CATEGORY_ICONS.other;
+          return `<div class="cat-bar-row">
+      <div class="cat-bar-label"><span class="cat-label-wrap"><span class="cat-icon-box">${catIcon}</span><span>${escapeHtml(CATEGORY_LABELS[cat] || cat)}</span></span><span class="mono">${fmtCcy(val, ccy)}</span></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;"></div></div>
+    </div>`;
+        }).join('');
+      }
+
+      let html = '';
+      if (entriesLAK.length > 0) {
+        html += `<div style="font-size:11.5px; font-weight:700; color:var(--gold); letter-spacing:.04em; text-transform:uppercase; margin-bottom:10px;">ກີບ (LAK)</div>${bars(entriesLAK, 'LAK')}`;
+      }
+      if (entriesVND.length > 0) {
+        html += `<div style="font-size:11.5px; font-weight:700; color:var(--gold); letter-spacing:.04em; text-transform:uppercase; margin:${entriesLAK.length ? '18px' : '0'} 0 10px;">VND</div>${bars(entriesVND, 'VND')}`;
+      }
+      wrap.innerHTML = html;
+    }
+
+    function renderLogs(logs) {
+      const list = document.getElementById('logList');
+      const entries = Object.values(logs).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      if (entries.length === 0) { list.innerHTML = '<div class="empty">ຍັງບໍ່ມີປະຫວັດ</div>'; return; }
+      list.innerHTML = entries.map(l => {
+        const d = l.ts ? formatLaoDate(l.ts) : '';
+        return `<div style="padding:10px 0; border-bottom:1px solid var(--line); font-size:13px; color:var(--ink);">
+      <div>${escapeHtml(l.message)}</div>
+      <div style="color:var(--ink-muted); font-size:11.5px; margin-top:3px;">${d} · ${l.role === 'admin' ? 'ແອັດມິນ' : 'ສະມາຊິກ'}</div>
+    </div>`;
+      }).join('');
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    /* ================================================================
+       ADMIN PIN LOCK
+       ================================================================ */
+    document.getElementById('adminToggleBtn').addEventListener('click', () => {
+      if (state.isAdmin) {
+        state.isAdmin = false;
+        document.getElementById('adminToggleBtn').classList.remove('active');
+        document.getElementById('adminToggleBtn').innerHTML = ADMIN_ICON_LOCKED + '<span>Admin</span>';
+        document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+        document.getElementById('memberAdjustBox').classList.add('hidden');
+        renderAll();
+      } else {
+        document.getElementById('pinLock').classList.remove('hidden');
+        document.getElementById('pinInput').value = '';
+        document.getElementById('pinErr').classList.remove('show');
+        document.getElementById('pinInput').focus();
+      }
+    });
+    document.getElementById('pinCancelBtn').addEventListener('click', () => {
+      document.getElementById('pinLock').classList.add('hidden');
+    });
+    document.getElementById('pinSubmitBtn').addEventListener('click', checkPin);
+    document.getElementById('pinInput').addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
+
+    function checkPin() {
+      const errEl = document.getElementById('pinErr');
+      if (!settingsLoaded) {
+        errEl.textContent = 'ກຳລັງໂຫລດຂໍ້ມູນ ກະລຸນາລໍຖ້າສັກຄູ່...';
+        errEl.classList.add('show');
+        return;
+      }
+      const entered = document.getElementById('pinInput').value.trim();
+      const real = state.settings.adminPin;
+      if (!real) {
+        // first-time setup: atomically set PIN only if still unset on server
+        if (entered.length < 4) {
+          errEl.textContent = 'ຕັ້ງລະຫັດ PIN ຢ່າງໜ້ອຍ 4 ໂຕ';
+          errEl.classList.add('show');
+          return;
+        }
+        db.ref('settings/adminPin').transaction(cur => cur ? undefined : entered)
+          .then(res => {
+            if (res.committed) {
+              activateAdmin();
+              toast('ຕັ້ງລະຫັດ PIN ສຳເລັດ — ຈື່ໄວ້ສຳລັບເທື່ອຕໍ່ໄປ');
+            } else {
+              errEl.textContent = 'ລະຫັດ PIN ຖືກຕັ້ງໄວ້ແລ້ວ ກະລຸນາໃສ່ລະຫັດທີ່ຖືກຕ້ອງ';
+              errEl.classList.add('show');
+            }
+          })
+          .catch(() => {
+            errEl.textContent = 'ເກີດຂໍ້ຜິດພາດ ລອງໃໝ່ອີກຄັ້ງ';
+            errEl.classList.add('show');
+          });
+        return;
+      }
+      if (entered === String(real)) {
+        errEl.classList.remove('show');
+        activateAdmin();
+      } else {
+        errEl.textContent = 'ລະຫັດບໍ່ຖືກຕ້ອງ';
+        errEl.classList.add('show');
+      }
+    }
+    function activateAdmin() {
+      state.isAdmin = true;
+      document.getElementById('pinLock').classList.add('hidden');
+      document.getElementById('adminToggleBtn').classList.add('active');
+      document.getElementById('adminToggleBtn').innerHTML = ADMIN_ICON_ACTIVE + '<span>Admin</span>';
+      document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+      renderAll();
+    }
+
+    /* ================================================================
+       ADD MEMBER / DELETE MEMBER  (Member-Zero Guard elsewhere)
+       ================================================================ */
+    document.getElementById('addMemberBtn').addEventListener('click', () => {
+      if (!requireAdmin()) return;
+      const btn = document.getElementById('addMemberBtn');
+      const input = document.getElementById('newMemberName');
+      const name = input.value.trim();
+      if (!name) { toast('ກະລຸນາໃສ່ຊື່ສະມາຊິກໃໝ່'); return; }
+      setLoading(btn, true, '+ ເພີ່ມສະມາຊິກ');
+      const ref = db.ref('members').push();
+      ref.set({ name, balance: 0, balance_VND: 0 })
+        .then(() => { writeLog(`ເພີ່ມສະມາຊິກໃໝ່: ${name}`); input.value = ''; toast('ເພີ່ມສະມາຊິກແລ້ວ'); })
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ ລອງອີກຄັ້ງ'))
+        .finally(() => setLoading(btn, false, '+ ເພີ່ມສະມາຊິກ'));
+    });
+
+    function deleteMember(id) {
+      if (!requireAdmin()) return;
+      const m = state.members[id];
+      if (!m) return;
+      if (id === state.settings.collectorMemberId) {
+        toast('ລົບບໍ່ໄດ້: ຄົນນີ້ຖືກຕັ້ງເປັນຜູ້ດູແລກອງກາງຢູ່ ກະລຸນາປ່ຽນຜູ້ດູແລກອງກາງກ່ອນ');
+        return;
+      }
+      if (Math.round(m.balance || 0) !== 0 || Math.round(m.balance_VND || 0) !== 0) {
+        toast('ລົບບໍ່ໄດ້: ສະມາຊິກຍັງມີຍອດຄ້າງຢູ່ (ກີບ ຫລື VND) ກະລຸນາເຄຍຍອດກ່ອນ');
+        return;
+      }
+      const hasPending = Object.values(state.payments).some(p => p && p.status === 'pending' && (p.from === id || p.to === id));
+      if (hasPending) {
+        toast('ລົບບໍ່ໄດ້: ສະມາຊິກຍັງມີຄຳຂໍແຈ້ງໂອນທີ່ລໍຖ້າກວດສອບຢູ່');
+        return;
+      }
+      if (!confirm(`ລົບສະມາຊິກ "${m.name}" ແມ່ນບໍ່?`)) return;
+      db.ref('members/' + id).remove()
+        .then(() => { writeLog(`ລົບສະມາຊິກ: ${m.name}`); toast('ລົບສະມາຊິກແລ້ວ'); })
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ ລອງອີກຄັ້ງ'));
+    }
+
+    /* ================================================================
+       ADD / EDIT / DELETE EXPENSE  (with runTransaction on every affected balance)
+       ================================================================ */
+    document.getElementById('addExpFab').addEventListener('click', () => {
+      if (membersArr().length === 0) { toast('ກະລຸນາໃຫ້ແອັດມິນເພີ່ມສະມາຊິກກ່ອນ'); return; }
+      editingExpenseId = null;
+      document.getElementById('expModalTitle').textContent = 'ເພີ່ມລາຍການຄ່າໃຊ້ຈ່າຍ';
+      document.getElementById('submitExpBtn').querySelector('span').textContent = 'ບັນທຶກລາຍການ';
+      populateExpenseModal();
+      document.getElementById('expErr').classList.remove('show');
+      openSheet('expOverlay');
+    });
+
+    function openEditExpense(id) {
+      if (!requireAdmin()) return;
+      const e = state.expenses[id];
+      if (!e) return;
+      editingExpenseId = id;
+      document.getElementById('expModalTitle').textContent = 'ແກ້ໄຂລາຍການຄ່າໃຊ້ຈ່າຍ';
+      document.getElementById('submitExpBtn').querySelector('span').textContent = 'ບັນທຶກການແກ້ໄຂ';
+      populateExpenseModal(e);
+      document.getElementById('expErr').classList.remove('show');
+      openSheet('expOverlay');
+    }
+
+    /* Reverse an expense's effect on member balances (used before edit/delete).
+       Aggregates deltas per member/currency, uses the expense's original collector
+       for rounding surplus, skips deleted members (never resurrects ghost nodes),
+       and returns a Promise. */
+    function reverseExpenseBalances(e) {
+      const payers = e.payers || (e.paidBy ? [{ memberId: e.paidBy, amount: e.amount, currency: 'LAK' }] : []);
+      const splitSharesLAK = e.splitShares || {};
+      const splitSharesVND = e.splitShares_VND || {};
+      const fallbackShareLAK = e.perPerson || 0;
+      const fallbackShareVND = e.perPerson_VND || 0;
+      const surplusCollectorId = e.collectorMemberId !== undefined ? e.collectorMemberId : state.settings.collectorMemberId;
+      const deltaLAK = {}, deltaVND = {};
+
+      // คืนเงินคนออกเงิน (แยกตามสกุลเงินของแต่ละคน — เก่าไม่มี currency ให้ถือเป็น LAK)
+      payers.forEach(p => {
+        if (!p.memberId || !state.members[p.memberId]) return;
+        const map = (p.currency === 'VND') ? deltaVND : deltaLAK;
+        map[p.memberId] = (map[p.memberId] || 0) - (p.amount || 0);
+      });
+
+      // คืนเงินคนหาร (ทั้ง LAK และ VND ถ้ามี)
+      (e.splitAmong || []).forEach(id => {
+        if (!state.members[id]) return;
+        const shareLAK = splitSharesLAK[id] !== undefined ? splitSharesLAK[id] : fallbackShareLAK;
+        if (shareLAK) deltaLAK[id] = (deltaLAK[id] || 0) + shareLAK;
+        const shareVND = splitSharesVND[id] !== undefined ? splitSharesVND[id] : fallbackShareVND;
+        if (shareVND) deltaVND[id] = (deltaVND[id] || 0) + shareVND;
+      });
+
+      // ดึงเศษกำไรปัดเศษออกจากผู้ดูแลกองกลาง ณ ตอนที่สร้างบิล (ทั้ง LAK และ VND)
+      const surplusLAK = e.roundingSurplus || 0;
+      const surplusVND = e.roundingSurplus_VND || 0;
+      if (surplusLAK > 0 && surplusCollectorId && state.members[surplusCollectorId]) {
+        deltaLAK[surplusCollectorId] = (deltaLAK[surplusCollectorId] || 0) - surplusLAK;
+      }
+      if (surplusVND > 0 && surplusCollectorId && state.members[surplusCollectorId]) {
+        deltaVND[surplusCollectorId] = (deltaVND[surplusCollectorId] || 0) - surplusVND;
+      }
+
+      const ops = [
+        ...Object.entries(deltaLAK).filter(([, d]) => d !== 0).map(([id, delta]) =>
+          db.ref('members/' + id + '/balance').transaction(cur => Math.round((cur || 0) + delta))),
+        ...Object.entries(deltaVND).filter(([, d]) => d !== 0).map(([id, delta]) =>
+          db.ref('members/' + id + '/balance_VND').transaction(cur => Math.round((cur || 0) + delta))),
+      ];
+
+      return Promise.all(ops);
+    }
+
+    function deleteExpense(id, triggerBtn) {
+      if (!requireAdmin()) return;
+      if (pendingExpenseDeletes.has(id)) return;
+      const e = state.expenses[id];
+      if (!e) return;
+      const amtSummary = [((e.amount_LAK ?? e.amount) > 0) ? fmtCcy(e.amount_LAK ?? e.amount, 'LAK') : null, (e.amount_VND > 0) ? fmtCcy(e.amount_VND, 'VND') : null].filter(Boolean).join(' + ');
+      if (!confirm(`ລົບລາຍການ "${e.description}" ${amtSummary} ໃຊ່ບໍ?`)) return;
+
+      pendingExpenseDeletes.add(id);
+      if (triggerBtn) triggerBtn.disabled = true;
+
+      // Atomically claim deletion of the expense node first so concurrent deletes cannot double-reverse balances
+      let deletedSnapshot = null;
+      db.ref('expenses/' + id).transaction(cur => {
+        if (!cur) return; // already deleted — abort
+        deletedSnapshot = cur;
+        return null;
+      }).then(res => {
+        if (!res.committed || !deletedSnapshot) {
+          toast('ລາຍການນີ້ຖືກລົບໄປແລ້ວ');
+          return;
+        }
+        return reverseExpenseBalances(deletedSnapshot).then(() => {
+          writeLog(`ລົບລາຍການ "${deletedSnapshot.description}" ${amtSummary}`);
+          toast('ລົບແລ້ວ');
+        });
+      }).catch(() => toast('ເກີດຂໍ້ຜິດພາດ'))
+        .finally(() => {
+          pendingExpenseDeletes.delete(id);
+          if (triggerBtn) triggerBtn.disabled = false;
+        });
+    }
+
+    function payerRowTemplate(members, prefill) {
+      let opts = members.map(m => `<option value="${m.id}" ${prefill && prefill.memberId === m.id ? 'selected' : ''}>${escapeHtml(m.name)}</option>`).join('');
+      if (prefill && prefill.memberId && !members.some(m => m.id === prefill.memberId)) {
+        opts = `<option value="${escapeHtml(prefill.memberId)}" selected>(ສະມາຊິກທີ່ລົບແລ້ວ)</option>` + opts;
+      }
+      const ccy = prefill && prefill.currency === 'VND' ? 'VND' : 'LAK';
+      const noteVal = prefill && prefill.note ? escapeHtml(prefill.note) : '';
+      return `<div class="payer-row-wrap">
+    <div class="note-quick-btns">
+      <button type="button" data-note="ເຄື່ອງປຸງ">ເຄື່ອງປຸງ</button>
+      <button type="button" data-note="ນ້ຳກ້ອນ">ນ້ຳກ້ອນ</button>
+      <button type="button" data-note="ທ້ອມ">ທ້ອມ</button>
+    </div>
+    <input type="text" class="payer-note" placeholder="ໝາຍເຫດ (ຄ່າຫຍັງ)" value="${noteVal}">
+    <div class="payer-row">
+    <select class="payer-member">${opts}</select>
+    <input type="number" min="1" step="1" class="mono payer-amount" placeholder="ຈຳນວນເງິນ" value="${prefill ? prefill.amount : ''}">
+    <button type="button" class="add-zeros-btn" title="ເພີ່ມ 000"> 000 </button>
+    <select class="payer-currency">
+      <option value="LAK" ${ccy === 'LAK' ? 'selected' : ''}>ກີບ</option>
+      <option value="VND" ${ccy === 'VND' ? 'selected' : ''}>VND</option>
+    </select>
+    <button type="button" class="rm-payer">✕</button>
+    </div>
+  </div>`;
+    }
+
+    function updateExpTotalPreview() {
+      let totalLAK = 0, totalVND = 0;
+      document.querySelectorAll('#payerRows .payer-row-wrap').forEach(wrap => {
+        const row = wrap.querySelector('.payer-row');
+        const amt = validAmount(row.querySelector('.payer-amount').value) || 0;
+        const ccy = row.querySelector('.payer-currency').value;
+        if (ccy === 'VND') totalVND += amt; else totalLAK += amt;
+      });
+      document.getElementById('expTotalPreviewLAK').textContent = fmtCcy(totalLAK, 'LAK');
+      document.getElementById('expTotalPreviewVND').textContent = fmtCcy(totalVND, 'VND');
+    }
+
+    function bindPayerRow(wrap) {
+      const row = wrap.querySelector('.payer-row');
+      row.querySelector('.payer-amount').addEventListener('input', updateExpTotalPreview);
+      row.querySelector('.payer-currency').addEventListener('change', updateExpTotalPreview);
+      row.querySelector('.add-zeros-btn').addEventListener('click', () => {
+        const inp = row.querySelector('.payer-amount');
+        const raw = inp.value.trim();
+        const curNum = Number(raw);
+        if (!raw || !Number.isFinite(curNum) || curNum <= 0) {
+          inp.value = '1000';
+        } else {
+          const next = Math.round(curNum * 1000);
+          if (next <= 999999999999) inp.value = String(next);
+        }
+        updateExpTotalPreview();
+      });
+      row.querySelector('.rm-payer').addEventListener('click', () => {
+        if (document.querySelectorAll('#payerRows .payer-row-wrap').length <= 1) return; // keep at least 1 row
+        wrap.remove();
+        updateExpTotalPreview();
+      });
+      // quick-fill note buttons
+      wrap.querySelectorAll('.note-quick-btns button[data-note]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const noteInput = wrap.querySelector('.payer-note');
+          const current = noteInput.value.trim();
+          const label = btn.dataset.note;
+          // if already contains this label, don't add again
+          if (current.includes(label)) return;
+          noteInput.value = current ? current + ', ' + label : label;
+        });
+      });
+    }
+
+    document.getElementById('addPayerRowBtn').addEventListener('click', () => {
+      const container = document.getElementById('payerRows');
+      const members = membersArr();
+      container.insertAdjacentHTML('beforeend', payerRowTemplate(members));
+      bindPayerRow(container.lastElementChild);
+    });
+
+    function populateExpenseModal(existing) {
+      const members = membersArr();
+      const payerContainer = document.getElementById('payerRows');
+      const existingPayers = existing ? (existing.payers || (existing.paidBy ? [{ memberId: existing.paidBy, amount: existing.amount }] : [])) : null;
+
+      if (existingPayers && existingPayers.length > 0) {
+        payerContainer.innerHTML = existingPayers.map(p => payerRowTemplate(members, p)).join('');
+        Array.from(payerContainer.children).forEach(bindPayerRow);
+      } else {
+        payerContainer.innerHTML = payerRowTemplate(members);
+        bindPayerRow(payerContainer.firstElementChild);
+      }
+
+      const chipWrap = document.getElementById('expSplitChips');
+      const existingSplit = existing ? (existing.splitAmong || []) : null;
+      chipWrap.innerHTML = members.map(m => {
+        const on = existingSplit ? existingSplit.includes(m.id) : true; // default: everyone selected for a new bill
+        return `<button type="button" class="chip ${on ? 'on' : ''}" data-id="${m.id}">${escapeHtml(m.name)}</button>`;
+      }).join('');
+      chipWrap.querySelectorAll('.chip').forEach(c => {
+        c.addEventListener('click', () => c.classList.toggle('on'));
+      });
+
+      document.getElementById('expDescInput').value = existing ? existing.description : '';
+      document.getElementById('expCategorySelect').value = existing ? (existing.category || 'other') : 'other';
+      updateExpTotalPreview();
+    }
+
+    document.getElementById('submitExpBtn').addEventListener('click', () => {
+      if (editingExpenseId && !requireAdmin()) return;
+      const btn = document.getElementById('submitExpBtn');
+      const errEl = document.getElementById('expErr');
+      const desc = document.getElementById('expDescInput').value.trim();
+      const category = document.getElementById('expCategorySelect').value;
+      const splitIds = Array.from(document.querySelectorAll('#expSplitChips .chip.on')).map(c => c.dataset.id);
+
+      // gather payer rows: each must have an existing member + valid amount > 0 + a currency (LAK/VND)
+      const payerWraps = Array.from(document.querySelectorAll('#payerRows .payer-row-wrap'));
+      const payers = [];
+      let payersValid = true;
+      payerWraps.forEach(wrap => {
+        const row = wrap.querySelector('.payer-row');
+        const memberId = row.querySelector('.payer-member').value;
+        const amount = validAmount(row.querySelector('.payer-amount').value);
+        const currency = row.querySelector('.payer-currency').value === 'VND' ? 'VND' : 'LAK';
+        const note = (wrap.querySelector('.payer-note').value || '').trim();
+        if (!memberId || !state.members[memberId] || !amount) { payersValid = false; return; }
+        const entry = { memberId, amount, currency };
+        if (note) entry.note = note;
+        payers.push(entry);
+      });
+      // keep each payer row as a separate entry (preserves individual notes)
+      const payersList = payers;
+      const totalLAK = payersList.filter(p => p.currency === 'LAK').reduce((s, p) => s + p.amount, 0);
+      const totalVND = payersList.filter(p => p.currency === 'VND').reduce((s, p) => s + p.amount, 0);
+
+      if (!desc || !payersValid || payers.length === 0 || (totalLAK <= 0 && totalVND <= 0) || splitIds.length === 0) {
+        errEl.textContent = 'ໃສ່ຂໍ້ມູນໃຫ້ຄົບ-ຖືກຕ້ອງ (ທຸກຄົນທີ່ອອກເງິນຕ້ອງເປັນສະມາຊິກປັດຈຸບັນ ແລະ ລະບຸຈຳນວນຫລາຍກວ່າ 0)';
+        errEl.classList.add('show');
+        return;
+      }
+      errEl.classList.remove('show');
+      const isEditing = Boolean(editingExpenseId);
+      const targetExpenseId = editingExpenseId;
+      const existingExp = isEditing ? state.expenses[targetExpenseId] : null;
+      const btnLabel = isEditing ? 'ບັນທຶກການແກ້ໄຂ' : 'ບັນທຶກລາຍການ';
+      setLoading(btn, true, btnLabel);
+
+      const n = splitIds.length;
+      const collectorId = (state.settings.collectorMemberId && state.members[state.settings.collectorMemberId])
+        ? state.settings.collectorMemberId
+        : null;
+
+      // คำนวณส่วนแบ่ง: ถ้ามีผู้ดูแลกองกลาง ปัดขึ้นเป็นพันแล้วโอนเศษให้กองกลาง; ถ้ายังไม่มี แบ่งลงตัวเป๊ะเพื่อรักษา zero-sum
+      const splitSharesLAK = {}, splitSharesVND = {};
+      let shareLAK = 0, shareVND = 0, roundingSurplusLAK = 0, roundingSurplusVND = 0;
+
+      if (totalLAK > 0) {
+        if (collectorId) {
+          shareLAK = roundUpToThousand(totalLAK / n);
+          splitIds.forEach(id => { splitSharesLAK[id] = shareLAK; });
+          roundingSurplusLAK = shareLAK * n - totalLAK;
+        } else {
+          const base = Math.floor(totalLAK / n);
+          const rem = totalLAK - base * n;
+          shareLAK = base;
+          splitIds.forEach((id, idx) => { splitSharesLAK[id] = base + (idx < rem ? 1 : 0); });
+          roundingSurplusLAK = 0;
+        }
+      }
+      if (totalVND > 0) {
+        if (collectorId) {
+          shareVND = roundUpToThousand(totalVND / n);
+          splitIds.forEach(id => { splitSharesVND[id] = shareVND; });
+          roundingSurplusVND = shareVND * n - totalVND;
+        } else {
+          const base = Math.floor(totalVND / n);
+          const rem = totalVND - base * n;
+          shareVND = base;
+          splitIds.forEach((id, idx) => { splitSharesVND[id] = base + (idx < rem ? 1 : 0); });
+          roundingSurplusVND = 0;
+        }
+      }
+
+      const expenseData = {
+        description: desc, category, payers: payersList, splitAmong: splitIds,
+        amount: totalLAK, amount_LAK: totalLAK, amount_VND: totalVND, // "amount" kept = LAK total for back-compat with older views
+        splitShares: splitSharesLAK, splitShares_VND: splitSharesVND,
+        perPerson: shareLAK, perPerson_VND: shareVND,
+        collectorMemberId: collectorId,
+        roundingSurplus: roundingSurplusLAK > 0 ? roundingSurplusLAK : 0,
+        roundingSurplus_VND: roundingSurplusVND > 0 ? roundingSurplusVND : 0,
+        ts: (existingExp && existingExp.ts) ? existingExp.ts : firebase.database.ServerValue.TIMESTAMP
+      };
+
+      function applyNewBalancesAndSave() {
+        const deltaLAK = {}, deltaVND = {};
+
+        // 1. คนออกเงิน ได้รับเงินคืนตามยอดบิลจริงที่จ่ายไป (แยกตามสกุลเงิน)
+        payersList.forEach(p => {
+          const d = p.currency === 'VND' ? deltaVND : deltaLAK;
+          d[p.memberId] = (d[p.memberId] || 0) + p.amount;
+        });
+
+        // 2. คนหารทุกคน ถูกหักเงินตามยอดส่วนแบ่ง (แยกตามสกุลเงิน)
+        splitIds.forEach(id => {
+          if (totalLAK > 0) deltaLAK[id] = (deltaLAK[id] || 0) - splitSharesLAK[id];
+          if (totalVND > 0) deltaVND[id] = (deltaVND[id] || 0) - splitSharesVND[id];
+        });
+
+        // 3. เศษส่วนเกิน (กำไรปัดเศษ) โอนเข้าบัญชีผู้ดูแลกองกลางอัตโนมัติ ทีละสกุลเงิน
+        if (roundingSurplusLAK > 0 && collectorId) deltaLAK[collectorId] = (deltaLAK[collectorId] || 0) + roundingSurplusLAK;
+        if (roundingSurplusVND > 0 && collectorId) deltaVND[collectorId] = (deltaVND[collectorId] || 0) + roundingSurplusVND;
+
+        const memberOps = [
+          ...Object.entries(deltaLAK).filter(([, d]) => d !== 0).map(([id, delta]) =>
+            db.ref('members/' + id + '/balance').transaction(current => Math.round((current || 0) + delta))),
+          ...Object.entries(deltaVND).filter(([, d]) => d !== 0).map(([id, delta]) =>
+            db.ref('members/' + id + '/balance_VND').transaction(current => Math.round((current || 0) + delta))),
+        ];
+
+        const expenseRef = isEditing ? db.ref('expenses/' + targetExpenseId) : db.ref('expenses').push();
+
+        return Promise.all(memberOps)
+          .then(() => expenseRef.set(expenseData))
+          .then(() => {
+            const payerNames = payersList.map(p => state.members[p.memberId]?.name || '').join(', ');
+            const amtSummary = [totalLAK > 0 ? fmtCcy(totalLAK, 'LAK') : null, totalVND > 0 ? fmtCcy(totalVND, 'VND') : null].filter(Boolean).join(' + ');
+            writeLog(isEditing
+              ? `ແກ້ໄຂລາຍການ "${desc}" ${amtSummary}`
+              : `ເພີ່ມລາຍການ "${desc}" ${amtSummary} (ອອກເງິນໂດຍ ${payerNames})`);
+            toast(isEditing ? 'ບັນທຶກການແກ້ໄຂແລ້ວ' : 'ບັນທຶກລາຍການແລ້ວ');
+            closeSheet('expOverlay');
+          });
+      }
+
+      const work = (isEditing && existingExp)
+        ? reverseExpenseBalances(existingExp).then(applyNewBalancesAndSave)
+        : applyNewBalancesAndSave();
+
+      work
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ ລອງໃໝ່ອີກຄັ້ງ'))
+        .finally(() => setLoading(btn, false, btnLabel));
+    });
+
+    /* ================================================================
+       MARK AS PAID  (member-facing request)
+       ================================================================ */
+    /* ================================================================
+       MARK AS PAID  (member-facing request)
+       ================================================================ */
+    document.getElementById('payFab').addEventListener('click', () => {
+      const collectorId = state.settings.collectorMemberId;
+      const collector = state.members[collectorId];
+      if (!collectorId || !collector) { toast('ແອັດມິນຍັງບໍ່ໄດ້ຕັ້ງຜູ້ດູແລກອງກາງ'); return; }
+      const members = membersArr().filter(m => m.id !== collectorId);
+      if (members.length === 0) { toast('ຍັງບໍ່ມີສະມາຊິກອື່ນນອກຈາກຜູ້ດູແລກອງກາງ'); return; }
+      const fromSel = document.getElementById('payFromSelect');
+      fromSel.innerHTML = members.map(m => `<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
+      document.getElementById('payToDisplay').value = collector.name + ' (ຜູ້ດູແລກອງກາງ)';
+      document.getElementById('payCurrencySelect').value = 'LAK';
+      document.getElementById('payAmountInput').value = '';
+      document.getElementById('payErr').classList.remove('show');
+      updatePayQuickAmount();
+      updatePayModalQr();
+      openSheet('payOverlay');
+    });
+
+    // === ຟັງຊັນເພີ່ມເຕີມ 2 ບລັອກລຸ່ມນີ້ ===
+    function updatePayQuickAmount() {
+      const fromId = document.getElementById('payFromSelect').value;
+      const ccy = document.getElementById('payCurrencySelect').value === 'VND' ? 'VND' : 'LAK';
+      const member = state.members[fromId];
+      const wrap = document.getElementById('payQuickAmounts');
+      if (!member) { wrap.innerHTML = ''; return; }
+      const bal = balOf(member, ccy);
+      if (bal >= 0) {
+        wrap.innerHTML = '<span style="font-size:12.5px; color:var(--ink-muted);">ຄົນນີ້ບໍ່ມີຍອດຄ້າງຈ່າຍໃນສະກຸນນີ້</span>';
+        return;
+      }
+      const owed = Math.abs(bal);
+      wrap.innerHTML = `<button type="button" class="chip on" id="payQuickBtn">ຍອດເຕັມ: ${fmtCcy(owed, ccy)}</button>`;
+      document.getElementById('payQuickBtn').addEventListener('click', () => {
+        document.getElementById('payAmountInput').value = owed;
+      });
+    }
+
+    /* Update QR code in payment modal based on selected currency */
+    function updatePayModalQr() {
+      const ccy = document.getElementById('payCurrencySelect').value === 'VND' ? 'VND' : 'LAK';
+      const qrUrl = ccy === 'VND' ? state.settings.qrImageUrlVND : state.settings.qrImageUrl;
+      const img = document.getElementById('payModalQrImg');
+      const empty = document.getElementById('payModalQrEmpty');
+      const dlBtn = document.getElementById('payModalDlQrBtn');
+      const label = document.getElementById('payModalQrLabel');
+
+      label.textContent = ccy === 'VND' ? 'QR Code ສຳລັບໂອນ VND' : 'QR Code BCEL One (ກີບ)';
+      dlBtn.textContent = ccy === 'VND' ? 'ດາວໂຫລດ QR VND' : 'ດາວໂຫລດ QR ກີບ';
+      const emptyMsg = ccy === 'VND'
+        ? 'ຍັງບໍ່ມີຮູບ QR VND — ແອັດມິນສາມາດເພີ່ມໄດ້ໃນໂໝດແອັດມິນ'
+        : 'ຍັງບໍ່ມີຮູບ QR ກີບ — ແອັດມິນສາມາດເພີ່ມໄດ້ໃນໂໝດແອັດມິນ';
+      applyQrDisplay(img, empty, dlBtn, qrUrl, emptyMsg);
+    }
+
+    document.getElementById('payFromSelect').addEventListener('change', () => { updatePayQuickAmount(); updatePayModalQr(); });
+    document.getElementById('payCurrencySelect').addEventListener('change', () => { updatePayQuickAmount(); updatePayModalQr(); });
+
+    /* Download QR from payment modal */
+    document.getElementById('payModalDlQrBtn').addEventListener('click', () => {
+      const ccy = document.getElementById('payCurrencySelect').value === 'VND' ? 'VND' : 'LAK';
+      const qrUrl = ccy === 'VND' ? state.settings.qrImageUrlVND : state.settings.qrImageUrl;
+      const filename = ccy === 'VND' ? 'QR_VND.jpg' : 'QR_BCEL_One_LAK.jpg';
+      downloadQrImage(qrUrl, filename);
+    });
+    // ===================================
+
+    // 👇 ໂຄ້ດເພີ່ມເຕີມ 👇
+    document.getElementById('submitPayBtn').addEventListener('click', () => {
+      const btn = document.getElementById('submitPayBtn');
+      const errEl = document.getElementById('payErr');
+      const from = document.getElementById('payFromSelect').value;
+      const to = state.settings.collectorMemberId;
+      const currency = document.getElementById('payCurrencySelect').value === 'VND' ? 'VND' : 'LAK';
+      const amount = validAmount(document.getElementById('payAmountInput').value);
+
+      if (!amount || !to || from === to) {
+        errEl.textContent = !amount ? 'ໃສ່ຈຳນວນເງິນທີ່ຖືກຕ້ອງ (ຫລາຍກວ່າ 0)' : 'ຜູ້ໂອນ ແລະ ຜູ້ຮັບຕ້ອງບໍ່ແມ່ນຄົນດຽວກັນ';
+        errEl.classList.add('show');
+        return;
+      }
+      errEl.classList.remove('show');
+      setLoading(btn, true, 'ສົ່ງຄຳຂໍແຈ້ງໂອນເງິນ');
+
+      db.ref('payments').push({
+        from, to, amountTransferred: amount, currency, status: 'pending',
+        ts: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        writeLog(`${state.members[from]?.name} ແຈ້ງໂອນເງິນເຂົ້າກອງກາງ (${state.members[to]?.name}) ຈຳນວນ ${fmtCcy(amount, currency)}`);
+        toast('ສົ່ງຄຳຂໍແລ້ວ ລໍຖ້າແອັດມິນກວດສອບ');
+        closeSheet('payOverlay');
+      }).catch(() => toast('ເກີດຂໍ້ຜິດພາດ ລອງໃໝ່ອີກຄັ້ງ'))
+        .finally(() => setLoading(btn, false, 'ສົ່ງຄຳຂໍແຈ້ງໂອນເງິນ'));
+    });
+    // 👆 ຈົບສ່ວນທີ່ເພີ່ມ 👆
+
+    /* ================================================================
+       ADMIN: APPROVE / PARTIAL / REJECT   (all via runTransaction)
+       ================================================================ */
+    let activePaymentId = null;
+
+    function approvePayment(id, mode, customAmount, triggerBtn) {
+      if (!requireAdmin()) return Promise.resolve(false);
+      if (pendingPaymentOps.has(id)) return Promise.resolve(false);
+      const p = state.payments[id];
+      if (!p || p.status !== 'pending') return Promise.resolve(false);
+      const resolvedAmount = mode === 'full' ? p.amountTransferred : customAmount;
+      if (!resolvedAmount || resolvedAmount <= 0) { toast('ຈຳນວນເງິນບໍ່ຖືກຕ້ອງ'); return Promise.resolve(false); }
+      const ccy = p.currency === 'VND' ? 'VND' : 'LAK';
+      const field = balField(ccy);
+      const newStatus = (mode === 'partial' && resolvedAmount !== p.amountTransferred) ? 'partial' : 'approved';
+
+      pendingPaymentOps.add(id);
+      if (triggerBtn) triggerBtn.disabled = true;
+
+      // Atomically claim the pending payment first so double-clicks or concurrent admins cannot double-apply balances
+      let claimedPayment = null;
+      return db.ref('payments/' + id).transaction(cur => {
+        if (!cur || cur.status !== 'pending') return; // abort if already processed or cancelled
+        claimedPayment = { ...cur };
+        return { ...cur, status: newStatus, resolvedAmount };
+      }).then(res => {
+        if (!res.committed || !claimedPayment) {
+          toast('ຄຳຂໍນີ້ຖືກດຳເນີນການ ຫລື ຍົກເລີກໄປແລ້ວ');
+          return false;
+        }
+        const ops = [];
+        if (state.members[claimedPayment.from]) {
+          ops.push(db.ref('members/' + claimedPayment.from + '/' + field).transaction(cur => Math.round((cur || 0) + resolvedAmount)));
+        }
+        if (state.members[claimedPayment.to]) {
+          ops.push(db.ref('members/' + claimedPayment.to + '/' + field).transaction(cur => Math.round((cur || 0) - resolvedAmount)));
+        }
+        return Promise.all(ops).then(() => {
+          const fromName = state.members[claimedPayment.from]?.name || '—';
+          const toName = state.members[claimedPayment.to]?.name || '—';
+          writeLog(`ອະນຸມັດ ${fromName} → ${toName} ຈຳນວນ ${fmtCcy(resolvedAmount, ccy)} (${mode === 'full' ? 'ເຕັມຈຳນວນ' : 'ບາງສ່ວນ/ກຳນົດເອງ'})`);
+          toast('ອະນຸມັດແລ້ວ');
+          return true;
+        });
+      }).catch(() => {
+        toast('ເກີດຂໍ້ຜິດພາດ ລອງໃໝ່ອີກຄັ້ງ');
+        return false;
+      }).finally(() => {
+        pendingPaymentOps.delete(id);
+        if (triggerBtn) triggerBtn.disabled = false;
+      });
+    }
+
+    function openPartialModal(id) {
+      if (!requireAdmin()) return;
+      activePaymentId = id;
+      const p = state.payments[id];
+      const ccy = (p && p.currency === 'VND') ? 'VND' : 'LAK';
+      const lbl = document.getElementById('partialAmountLabel');
+      if (lbl) lbl.textContent = `ຍອດທີ່ຈະອະນຸມັດ (${CURRENCY_LABELS[ccy]})`;
+      document.getElementById('partialAmountInput').value = p ? p.amountTransferred : '';
+      openSheet('partialOverlay');
+    }
+    document.getElementById('confirmPartialBtn').addEventListener('click', () => {
+      if (!requireAdmin()) return;
+      const btn = document.getElementById('confirmPartialBtn');
+      const amount = validAmount(document.getElementById('partialAmountInput').value);
+      if (!amount) { toast('ໃສ່ຈຳນວນເງິນທີ່ຖືກຕ້ອງ (ຫລາຍກວ່າ 0)'); return; }
+      setLoading(btn, true, 'ຢືນຢັນອະນຸມັດ');
+      approvePayment(activePaymentId, 'partial', amount)
+        .then(ok => { if (ok) closeSheet('partialOverlay'); })
+        .finally(() => setLoading(btn, false, 'ຢືນຢັນອະນຸມັດ'));
+    });
+
+    function openRejectModal(id) {
+      if (!requireAdmin()) return;
+      activePaymentId = id;
+      document.getElementById('rejectReasonInput').value = '';
+      openSheet('rejectOverlay');
+    }
+    document.getElementById('confirmRejectBtn').addEventListener('click', () => {
+      if (!requireAdmin()) return;
+      const btn = document.getElementById('confirmRejectBtn');
+      const reason = document.getElementById('rejectReasonInput').value.trim() || 'ບໍ່ລະບຸເຫດຜົນ';
+      const targetId = activePaymentId;
+      if (!targetId || pendingPaymentOps.has(targetId)) return;
+      pendingPaymentOps.add(targetId);
+      setLoading(btn, true, 'ຢືນຢັນປະຕິເສດ');
+      let rejectedFrom = null;
+      db.ref('payments/' + targetId).transaction(cur => {
+        if (!cur || cur.status !== 'pending') return; // do not resurrect cancelled/deleted payment
+        rejectedFrom = cur.from;
+        return { ...cur, status: 'rejected', rejectReason: reason };
+      }).then(res => {
+        if (!res.committed) {
+          toast('ຄຳຂໍນີ້ຖືກດຳເນີນການ ຫລື ຍົກເລີກໄປແລ້ວ');
+          closeSheet('rejectOverlay');
+          return;
+        }
+        writeLog(`ປະຕິເສດຄຳຂໍໂອນຂອງ ${state.members[rejectedFrom]?.name || '—'} — ເຫດຜົນ: ${reason}`);
+        toast('ປະຕິເສດຄຳຂໍແລ້ວ');
+        closeSheet('rejectOverlay');
+      })
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'))
+        .finally(() => {
+          pendingPaymentOps.delete(targetId);
+          setLoading(btn, false, 'ຢືນຢັນປະຕິເສດ');
+        });
+    });
+
+    /* ================================================================
+       ADMIN: SAVE COLLECTOR (ຜູ້ດູແລກອງກາງ)  (must be a member)
+       ================================================================ */
+    document.getElementById('saveCollectorBtn').addEventListener('click', () => {
+      if (!requireAdmin()) return;
+      const btn = document.getElementById('saveCollectorBtn');
+      const id = document.getElementById('collectorSelect').value;
+      if (!id) { toast('ກະລຸນາໃຫ້ເພີ່ມສະມາຊິກກ່ອນ'); return; }
+      setLoading(btn, true, 'ບັນທຶກຜູ້ດູແລ');
+      db.ref('settings/collectorMemberId').set(id)
+        .then(() => { writeLog(`ຕັ້ງ "${state.members[id]?.name}" ເປັນຜູ້ດູແລກອງກາງ`); toast('ບັນທຶກແລ້ວ'); })
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'))
+        .finally(() => setLoading(btn, false, 'ບັນທຶກຜູ້ດູແລ'));
+    });
+
+    /* ================================================================
+       ADMIN: SAVE QR URL (LAK)
+       ================================================================ */
+    document.getElementById('saveQrBtn').addEventListener('click', () => {
+      if (!requireAdmin()) return;
+      const btn = document.getElementById('saveQrBtn');
+      const input = document.getElementById('qrUrlInput');
+      const url = input.value.trim();
+      setLoading(btn, true, 'ບັນທຶກ QR ກີບ');
+      db.ref('settings/qrImageUrl').set(url)
+        .then(() => { delete input.dataset.dirty; writeLog('ອັບເດດລິ້ງຮູບ QR BCEL One (ກີບ)'); toast('ບັນທຶກແລ້ວ'); })
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'))
+        .finally(() => setLoading(btn, false, 'ບັນທຶກ QR ກີບ'));
+    });
+
+    /* ================================================================
+       ADMIN: SAVE QR URL (VND)
+       ================================================================ */
+    document.getElementById('saveQrVNDBtn').addEventListener('click', () => {
+      if (!requireAdmin()) return;
+      const btn = document.getElementById('saveQrVNDBtn');
+      const input = document.getElementById('qrUrlInputVND');
+      const url = input.value.trim();
+      setLoading(btn, true, 'ບັນທຶກ QR VND');
+      db.ref('settings/qrImageUrlVND').set(url)
+        .then(() => { delete input.dataset.dirty; writeLog('ອັບເດດລິ້ງຮູບ QR VND (ເງິນເວຍດນາມ)'); toast('ບັນທຶກແລ້ວ'); })
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'))
+        .finally(() => setLoading(btn, false, 'ບັນທຶກ QR VND'));
+    });
+
+    /* ================================================================
+       ADMIN: UPLOAD QR IMAGE FILE (convert to base64 data URL)
+       — Works everywhere including iOS, no external hosting needed
+       ================================================================ */
+    function setupQrFileUpload(fileInputId, textInputId) {
+      document.getElementById(fileInputId).addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { toast('ໄຟລ໌ໃຫຍ່ເກີນໄປ (ສູງສຸດ 5MB)'); e.target.value = ''; return; }
+        const reader = new FileReader();
+        reader.onerror = () => { toast('ອ່ານໄຟລ໌ຮູບບໍ່ສຳເລັດ'); e.target.value = ''; };
+        reader.onload = (ev) => {
+          // Resize image to fit within reasonable dimensions for Firebase
+          const img = new Image();
+          img.onerror = () => { toast('ໄຟລ໌ນີ້ບໍ່ແມ່ນຮູບພາບທີ່ຖືກຕ້ອງ'); e.target.value = ''; };
+          img.onload = () => {
+            const maxSize = 800;
+            let w = img.width, h = img.height;
+            if (w > maxSize || h > maxSize) {
+              if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+              else { w = Math.round(w * maxSize / h); h = maxSize; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            // Fill white background so transparent PNG QR codes do not turn black in JPEG
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            const txt = document.getElementById(textInputId);
+            txt.value = dataUrl;
+            txt.dataset.dirty = '1';
+            e.target.value = '';
+            toast('ອັບໂຫລດຮູບສຳເລັດ — ກົດບັນທຶກເພື່ອເຊັບ');
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    setupQrFileUpload('qrFileInputLAK', 'qrUrlInput');
+    setupQrFileUpload('qrFileInputVND', 'qrUrlInputVND');
+
+    /* ================================================================
+       QR TAB SWITCHING
+       ================================================================ */
+    document.querySelectorAll('.qr-section-tabs button[data-qr-tab]').forEach(tabBtn => {
+      tabBtn.addEventListener('click', () => {
+        document.querySelectorAll('.qr-section-tabs button').forEach(b => b.classList.remove('active'));
+        tabBtn.classList.add('active');
+        const tab = tabBtn.dataset.qrTab;
+        document.getElementById('qrTabLAK').classList.toggle('active', tab === 'lak');
+        document.getElementById('qrTabVND').classList.toggle('active', tab === 'vnd');
+      });
+    });
+
+    /* ================================================================
+       DOWNLOAD QR CODE LOGIC — iOS compatible
+       ================================================================
+       iOS Safari does not support the `download` attribute on <a> tags,
+       and Blob URLs opened via a.click() don't trigger a save dialog.
+
+       Strategy:
+       1. Try the Web Share API (works great on iOS 15+ and modern Android)
+       2. Fallback: draw the image onto a <canvas>, convert to blob,
+          and open it in a new tab so the user can long-press to save.
+       ================================================================ */
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    async function fetchImageBlob(imgUrl) {
+      if (imgUrl.startsWith('data:')) {
+        const res = await fetch(imgUrl);
+        if (!res.ok) return null;
+        return await res.blob();
+      }
+      try {
+        const res = await fetch(imgUrl, { mode: 'cors' });
+        if (!res.ok) return null;
+        const blob = await res.blob();
+        if (blob.type && !blob.type.startsWith('image/')) return null;
+        return blob;
+      } catch {
+        return await imageUrlToBlob(imgUrl);
+      }
+    }
+
+    async function downloadQrImage(imgUrl, filename) {
+      if (!imgUrl) return;
+
+      try {
+        // Fetch once and reuse across strategies (rejects 404 / non-image responses)
+        const blob = await fetchImageBlob(imgUrl);
+
+        // Strategy 1: Use Web Share API if available (best for iOS + Android)
+        if (blob && navigator.canShare && navigator.share) {
+          const file = new File([blob], filename, { type: blob.type || 'image/jpeg' });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: filename });
+            toast('ແຊຣ໌ QR ສຳເລັດ');
+            return;
+          }
+        }
+
+        // Strategy 2: Traditional blob download (works on desktop & Android Chrome)
+        if (blob && !isIOS()) {
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+          toast('ດາວໂຫລດ QR ແລ້ວ');
+          return;
+        }
+
+        // Strategy 3: iOS fallback — open image in new tab for long-press save
+        if (blob) {
+          const blobUrl = URL.createObjectURL(blob);
+          const w = window.open('', '_blank');
+          if (w) {
+            w.document.write(`
+              <!DOCTYPE html>
+              <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+              <title>${escapeHtml(filename)}</title>
+              <style>body{margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#f5f5f5;font-family:sans-serif;padding:20px;text-align:center;}
+              img{max-width:90%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);}
+              p{color:#555;font-size:15px;margin-top:16px;font-weight:600;}</style></head>
+              <body><img src="${blobUrl}"><p>📱 ກົດຄ້າງທີ່ຮູບ ແລ້ວເລືອກ "Save Image" / "ບັນທຶກຮູບ"</p></body></html>`);
+            w.document.close();
+            toast('ກົດຄ້າງທີ່ຮູບເພື່ອບັນທຶກ');
+            return;
+          }
+          URL.revokeObjectURL(blobUrl);
+          toast('ກົດຄ້າງທີ່ຮູບ QR ດ້ານເທິງເພື່ອບັນທຶກ');
+          return;
+        }
+
+        // Final fallback (avoid navigating to data: URLs which Safari/Chrome block)
+        if (!imgUrl.startsWith('data:')) {
+          window.open(imgUrl, '_blank');
+          toast('ກົດຄ້າງທີ່ຮູບເພື່ອບັນທຶກ');
+        } else {
+          toast('ໂຫລດຮູບ QR ບໍ່ສຳເລັດ ກະລຸນາກົດຄ້າງທີ່ຮູບເພື່ອບັນທຶກ');
+        }
+      } catch (err) {
+        if (err && err.name === 'AbortError') return; // user cancelled share sheet
+        console.warn('QR download error:', err);
+        toast('ກົດຄ້າງທີ່ຮູບ QR ດ້ານເທິງເພື່ອບັນທຶກ');
+      }
+    }
+
+    /* Helper: convert image URL to blob via canvas (bypasses some CORS issues) */
+    function imageUrlToBlob(url) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.92);
+          } catch {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+    }
+
+    document.getElementById('downloadQrBtn').addEventListener('click', () => {
+      downloadQrImage(state.settings.qrImageUrl, 'QR_BCEL_One_LAK.jpg');
+    });
+
+    document.getElementById('downloadQrVNDBtn').addEventListener('click', () => {
+      downloadQrImage(state.settings.qrImageUrlVND, 'QR_VND.jpg');
+    });
+
+    /* ================================================================
+       CSV EXPORT (expenses + final balances)
+       ================================================================ */
+    function csvEscape(v) {
+      if (typeof v === 'number') return String(v);
+      let s = String(v ?? '');
+      // Neutralize spreadsheet formula injection while keeping pure numbers intact
+      if (/^[=+\-@\t\r]/.test(s) && !/^-?\d+(\.\d+)?$/.test(s)) {
+        s = "'" + s;
+      }
+      return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+      const rows = [];
+      rows.push(['# ລາຍການຄ່າໃຊ້ຈ່າຍ']);
+      rows.push(['ວັນທີ', 'ລາຍລະອຽດ', 'ໝວດໝູ່', 'ຍອດລວມ (ກີບ)', 'ຍອດລວມ (VND)', 'ຄົນອອກເງິນ', 'ຫານກັບ']);
+      Object.values(state.expenses).sort((a, b) => (a.ts || 0) - (b.ts || 0)).forEach(e => {
+        const payers = e.payers || (e.paidBy ? [{ memberId: e.paidBy, amount: e.amount, currency: 'LAK' }] : []);
+        const payerText = payers.map(p => `${state.members[p.memberId]?.name || '—'} (${fmtCcy(p.amount, p.currency || 'LAK')})`).join('; ');
+        const splitText = (e.splitAmong || []).map(id => state.members[id]?.name || '—').join('; ');
+        const d = formatLaoDate(e.ts);
+        rows.push([d, e.description || '', CATEGORY_LABELS[e.category] || e.category || '', e.amount_LAK ?? e.amount ?? 0, e.amount_VND || 0, payerText, splitText]);
+      });
+      rows.push([]);
+      rows.push(['# ຍອດຄົງເຫລືອສຸດທ້າຍ']);
+      rows.push(['ຊື່', 'ຍອດ (ກີບ)', 'ຍອດ (VND)', 'ສະຖານະ']);
+      membersArr().forEach(m => {
+        const balLAK = balOf(m, 'LAK');
+        const balVND = balOf(m, 'VND');
+        const status = (balLAK >= 0 && balVND >= 0) ? 'ລໍຖ້າຮັບເງິນ' : (balLAK <= 0 && balVND <= 0) ? 'ຕ້ອງຈ່າຍ' : 'ປະສົມ';
+        rows.push([m.name, balLAK, balVND, status]);
+      });
+
+      const csv = '\uFEFF' + rows.map(r => r.map(csvEscape).join(',')).join('\n'); // BOM so Excel opens Lao/Thai text correctly
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lak-splitbill-${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast('ດາວໂຫລດ CSV ແລ້ວ');
+    });
+
+    /* ================================================================
+           ADMIN: CUSTOM TOTAL EXPENSE OVERRIDE / RESET
+           ================================================================ */
+    document.getElementById('saveCustomTotalBtn')?.addEventListener('click', () => {
+      if (!requireAdmin()) return;
+      const btn = document.getElementById('saveCustomTotalBtn');
+      const valLAK = document.getElementById('customTotalInputLAK').value.trim();
+      const valVND = document.getElementById('customTotalInputVND').value.trim();
+
+      if ((valLAK !== '' && (!Number.isFinite(Number(valLAK)) || Number(valLAK) < 0))
+        || (valVND !== '' && (!Number.isFinite(Number(valVND)) || Number(valVND) < 0))) {
+        toast('ຈຳນວນເງິນຕ້ອງເປັນໂຕເລກທີ່ຕັ້ງແຕ່ 0 ຂຶ້ນໄປ');
+        return;
+      }
+
+      const updates = {
+        'settings/customTotalLAK': valLAK === '' ? null : Math.round(Number(valLAK)),
+        'settings/customTotalVND': valVND === '' ? null : Math.round(Number(valVND))
+      };
+
+      setLoading(btn, true, 'ບັນທຶກຍອດລວມ');
+      db.ref().update(updates)
+        .then(() => { writeLog('ແອັດມິນແກ້ໄຂຍອດລວມທັງໝົດແລ້ວ'); toast('ແກ້ໄຂຍອດລວມສຳເລັດແລ້ວ'); })
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'))
+        .finally(() => setLoading(btn, false, 'ບັນທຶກຍອດລວມ'));
+    });
+
+    document.getElementById('resetTotalZeroBtn')?.addEventListener('click', () => {
+      if (!requireAdmin()) return;
+      if (!confirm('ຕ້ອງການຮີເຊັດຍອດລວມທັງໝົດເປັນ 0 ແມ່ນບໍ່?')) return;
+      db.ref().update({ 'settings/customTotalLAK': 0, 'settings/customTotalVND': 0 })
+        .then(() => { writeLog('ແອັດມິນຮີເຊັດຍອດລວມທັງໝົດເປັນ 0'); toast('ຮີເຊັດຍອດລວມເປັນ 0 ແລ້ວ'); })
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'));
+    });
+
+    document.getElementById('restoreAutoTotalBtn')?.addEventListener('click', () => {
+      if (!requireAdmin()) return;
+      db.ref().update({ 'settings/customTotalLAK': null, 'settings/customTotalVND': null })
+        .then(() => {
+          writeLog('ແອັດມິນຄືນຄ່າຄຳນວນຍອດລວມທັງໝົດເປັນແບບອັດຕະໂນມັດ');
+          document.getElementById('customTotalInputLAK').value = '';
+          document.getElementById('customTotalInputVND').value = '';
+          toast('ຄືນຄ່າການຄຳນວນສຳເລັດແລ້ວ');
+        }).catch(() => toast('ເກີດຂໍ້ຜິດພາດ'));
+    });
+
+
+    /* ================================================================
+       LIGHT / DARK THEME MANAGER (Obsidian Ivory <-> Obsidian Matte)
+       ================================================================ */
+    const THEME_STORAGE_KEY = 'harnNganTheme';
+
+    function getSavedTheme() {
+      try {
+        const v = localStorage.getItem(THEME_STORAGE_KEY);
+        return (v === 'dark' || v === 'light') ? v : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function applyTheme(theme, persist) {
+      const resolved = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', resolved);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', resolved === 'dark' ? '#0E0D0C' : '#F6F5F1');
+      const btn = document.getElementById('themeToggleBtn');
+      if (btn) {
+        btn.setAttribute('aria-pressed', resolved === 'dark' ? 'true' : 'false');
+        btn.setAttribute('aria-label', resolved === 'dark' ? 'ປ່ຽນເປັນໂໝດກາງວັນ' : 'ປ່ຽນເປັນໂໝດກາງຄືນ');
+      }
+      if (persist) {
+        try { localStorage.setItem(THEME_STORAGE_KEY, resolved); } catch (e) { /* storage blocked */ }
+      }
+    }
+
+    (function initTheme() {
+      const saved = getSavedTheme();
+      const mq = (typeof window !== 'undefined' && window.matchMedia)
+        ? window.matchMedia('(prefers-color-scheme: dark)')
+        : null;
+      const initial = saved || (mq && mq.matches ? 'dark' : 'light');
+      applyTheme(initial, false);
+
+      const toggleBtn = document.getElementById('themeToggleBtn');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+          applyTheme(current === 'dark' ? 'light' : 'dark', true);
+        });
+      }
+
+      if (mq && typeof mq.addEventListener === 'function') {
+        mq.addEventListener('change', (e) => {
+          if (!getSavedTheme()) {
+            applyTheme(e.matches ? 'dark' : 'light', false);
+          }
+        });
+      }
+    })();
+
+    /* ================================================================
+       WEBSITE LOGO SLOT LOADER (graceful fallback before logo.png exists)
+       ================================================================ */
+    function bindLogoSlot(imgId, fallbackId, wrapId) {
+      const img = document.getElementById(imgId);
+      const fallback = document.getElementById(fallbackId);
+      const wrap = document.getElementById(wrapId);
+      if (!img) return;
+      const showImg = () => {
+        img.style.display = 'block';
+        if (fallback) fallback.style.display = 'none';
+        if (wrap) wrap.classList.add('has-logo');
+      };
+      const showFallback = () => {
+        img.style.display = 'none';
+        if (fallback) fallback.style.display = '';
+        if (wrap) wrap.classList.remove('has-logo');
+      };
+      img.addEventListener('load', () => {
+        if (img.naturalWidth > 0) showImg();
+        else showFallback();
+      });
+      img.addEventListener('error', showFallback);
+      if (img.complete) {
+        if (img.naturalWidth > 0) showImg();
+        else showFallback();
+      }
+    }
+    bindLogoSlot('siteLogoImg', 'siteLogoFallback', 'siteLogoWrap');
+    bindLogoSlot('vaultLogoImg', 'vaultLogoFallback', 'vaultLogoWrap');
+
+    renderAll();
+  </script>
+</body>
+
+</html>
