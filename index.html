@@ -98,15 +98,21 @@
     <section class="ticket" aria-label="ສະຫລຸບຍອດລວມ">
       <div class="ticket-top-row">
         <div class="eyebrow">ຍອດລວມທັງໝົດ</div>
-        <span class="ticket-chip mono">LEDGER</span>
+        <button type="button" class="bill-switcher-pill" id="billSwitcherBtn" aria-label="ສະຫຼັບ ຫລື ເບິ່ງບິນອື່ນ">
+          <svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+          </svg>
+          <span id="currentBillLabel">ບິນຫຼັກ</span>
+          <svg class="ico ico-xs" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
       </div>
       <div class="total mono">
         <span id="totalExpense">0</span><small>ກີບ / LAK</small>
-        <span id="totalLAKOverrideBadge" class="override-badge hidden">ປັບເອງ</span>
       </div>
       <div class="total-sub mono">
         <span id="totalExpenseVND">0</span><small>VND</small>
-        <span id="totalVNDOverrideBadge" class="override-badge hidden">ປັບເອງ</span>
       </div>
       <div class="meta-row">
         <span class="meta-item">
@@ -488,31 +494,21 @@
 
       <div class="card">
         <div class="field" style="margin-bottom:10px;">
-          <label>ແກ້ໄຂຍອດລວມ</label>
-          <div style="display:flex; gap:10px; margin-top:6px;">
-            <div style="flex:1;">
-              <div style="font-size:11.5px; font-weight:600; color:var(--ink-muted); margin-bottom:4px;">ກີບ (LAK)</div>
-              <input type="number" min="0" step="1" class="mono" id="customTotalInputLAK" placeholder="ຍອດ LAK">
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:11.5px; font-weight:600; color:var(--ink-muted); margin-bottom:4px;">ດົ່ງ (VND)
-              </div>
-              <input type="number" min="0" step="1" class="mono" id="customTotalInputVND" placeholder="ຍອດ VND">
-            </div>
-          </div>
+          <label>ຈັດການຊຸດບິນ (ແຍກກຸ່ມ / ຮອບໃໝ່)</label>
+          <p class="helper-text" style="margin:0 0 12px;">ສ້າງບິນໃໝ່ເພື່ອແຍກສະມາຊິກ, ຍອດເງິນ, ປະຫວັດລາຍການ ແລະ ຄຳຂໍໂອນອອກຈາກກັນທັງໝົດ ໂດຍຍັງສາມາດກົດກັບມາເບິ່ງບິນເກົ່າໄດ້ຕະຫຼອດ</p>
         </div>
-        <div style="display:flex; gap:8px; margin-top:10px;">
-          <button type="button" class="primary-btn" id="saveCustomTotalBtn"
-            style="flex:1;"><span>ບັນທຶກຍອດລວມ</span></button>
-          <button type="button" class="pay-btn btn-danger" id="resetTotalZeroBtn"
-            style="padding:0 14px; min-height:48px; border-radius:14px;">ຮີເຊັດ 0</button>
-        </div>
-        <button type="button" class="ghost-btn" id="restoreAutoTotalBtn">
+        <button type="button" class="primary-btn" id="openNewBillBtn">
           <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-            <path d="M3 3v5h5" />
+            <path d="M12 5v14" />
+            <path d="M5 12h14" />
           </svg>
-          <span>ຄືນຄ່າອັດຕະໂນມັດ</span>
+          <span>ສ້າງບິນໃໝ່</span>
+        </button>
+        <button type="button" class="ghost-btn" id="openBillListBtn">
+          <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+          </svg>
+          <span>ເບິ່ງ / ສະຫຼັບບິນທັງໝົດ</span>
         </button>
       </div>
     </section>
@@ -726,6 +722,56 @@
     </div>
   </div>
 
+  <!-- ============ MODAL: BILL SWITCHER (VIEW OLD / SWITCH BILLS) ============ -->
+  <div class="overlay" id="billsOverlay" role="dialog" aria-modal="true" aria-labelledby="billsModalHeading">
+    <div class="sheet">
+      <button type="button" class="close" data-close="billsOverlay" aria-label="ປິດ">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" x2="6" y1="6" y2="18" />
+          <line x1="6" x2="18" y1="6" y2="18" />
+        </svg>
+      </button>
+      <h3 id="billsModalHeading">ເລືອກຊຸດບິນ</h3>
+      <p class="helper-text" style="margin:-6px 0 14px;">ແຕ່ລະບິນແຍກສະມາຊິກ, ຍອດເງິນ ແລະ ປະຫວັດອອກຈາກກັນທັງໝົດ</p>
+      <div id="billsList" class="bill-list"></div>
+      <button type="button" class="primary-btn admin-only hidden" id="createBillFromListBtn">
+        <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5v14" />
+          <path d="M5 12h14" />
+        </svg>
+        <span>+ ສ້າງບິນໃໝ່</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: CREATE NEW BILL ============ -->
+  <div class="overlay" id="newBillOverlay" role="dialog" aria-modal="true" aria-labelledby="newBillModalHeading">
+    <div class="sheet">
+      <button type="button" class="close" data-close="newBillOverlay" aria-label="ປິດ">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" x2="6" y1="6" y2="18" />
+          <line x1="6" x2="18" y1="6" y2="18" />
+        </svg>
+      </button>
+      <h3 id="newBillModalHeading">ສ້າງບິນໃໝ່</h3>
+      <p class="helper-text" style="margin:-6px 0 14px;">ເລີ່ມຍອດໃໝ່ຕັ້ງແຕ່ 0 ແຍກຈາກບິນເກົ່າທັງໝົດ ໂດຍບິນເກົ່າຍັງເປີດເບິ່ງໄດ້</p>
+      <div class="field">
+        <label for="newBillNameInput">ຊື່ບິນ / ກຸ່ມໃໝ່</label>
+        <input type="text" id="newBillNameInput" placeholder="ເຊັ່ນ ທຣິບວັງວຽງ, ກຸ່ມເພື່ອນໃໝ່, ຮອບເດືອນ 11">
+        <div class="err-msg" id="newBillErr">ກະລຸນາໃສ່ຊື່ບິນໃໝ່</div>
+      </div>
+      <label class="check-row">
+        <input type="checkbox" id="newBillCopyMembers">
+        <span>ຄັດລອກລາຍຊື່ສະມາຊິກຈາກບິນປັດຈຸບັນ (ເລີ່ມຍອດ 0)</span>
+      </label>
+      <label class="check-row">
+        <input type="checkbox" id="newBillCopyQr" checked>
+        <span>ໃຊ້ຮູບ QR ໂອນເງິນເດີມ</span>
+      </label>
+      <button type="button" class="primary-btn" id="confirmNewBillBtn" style="margin-top:6px;"><span>ສ້າງບິນໃໝ່</span></button>
+    </div>
+  </div>
+
   <!-- ============ ADMIN PIN LOCK ============ -->
   <div class="lock-screen hidden" id="pinLock" role="dialog" aria-modal="true" aria-label="ໂໝດແອັດມິນ">
     <div class="lock-emblem" id="vaultLogoWrap">
@@ -787,19 +833,62 @@
 
     let state = {
       members: {},      // id -> {name, balance}
-      expenses: {},      // id -> {...}
-      payments: {},      // id -> {...}
-      adjustments: {},   // id -> {memberId, delta, reason, ts} — admin manual balance corrections
-      settings: {},
+      expenses: {},     // id -> {...}
+      payments: {},     // id -> {...}
+      adjustments: {},  // id -> {memberId, delta, reason, ts} — admin manual balance corrections
+      settings: {},     // per-bill settings (collectorMemberId, qrImageUrl, qrImageUrlVND)
+      bills: {},        // global registry: billId -> {name, createdAt}
       isAdmin: false
     };
+    let currentBillId = 'default'; // 'default' = original root ledger; others live under billData/<billId>/...
+    let globalAdminPin = null;
+    let defaultBillName = 'ບິນຫຼັກ';
+    let globalActiveBillId = null;
+    let urlPinnedBill = false;     // true when opened with ?bill=<id>
     let editingExpenseId = null;   // set while the expense modal is in "edit" mode
     let settingsLoaded = false;    // guard against overwriting adminPin before initial load
     let knownPaymentIds = null;    // null until first payments snapshot, then a Set of seen ids (for notifications)
     let notifPermission = (typeof Notification !== 'undefined') ? Notification.permission : 'unsupported';
+    let lastFocusedEl = null;
     const pendingPaymentOps = new Set();
     const pendingExpenseDeletes = new Set();
     const VALID_PAYMENT_STATUSES = new Set(['pending', 'approved', 'partial', 'rejected']);
+
+    /* Scoped Firebase reference for the currently active bill/ledger */
+    function billRef(subpath) {
+      if (!currentBillId || currentBillId === 'default') return db.ref(subpath);
+      return db.ref('billData/' + currentBillId + '/' + subpath);
+    }
+
+    function getBillName(billId) {
+      if (!billId || billId === 'default') return defaultBillName || 'ບິນຫຼັກ';
+      return (state.bills[billId] && state.bills[billId].name) || 'ບິນ';
+    }
+
+    function getBillShareUrl(billId) {
+      const targetId = billId || currentBillId;
+      try {
+        const u = new URL(window.location.href);
+        if (!targetId || targetId === 'default') u.searchParams.delete('bill');
+        else u.searchParams.set('bill', targetId);
+        return u.toString();
+      } catch (e) {
+        return window.location.href;
+      }
+    }
+
+    function updateInviteShare() {
+      const shareUrl = getBillShareUrl(currentBillId);
+      const qrImg = document.getElementById('inviteQrImg');
+      if (qrImg) {
+        qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(shareUrl);
+      }
+      try {
+        if (window.history && typeof window.history.replaceState === 'function') {
+          window.history.replaceState(null, '', shareUrl);
+        }
+      } catch (e) { /* ignore on file:// or restricted origins */ }
+    }
 
     /* ---------------- helpers ---------------- */
     function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
@@ -809,10 +898,22 @@
       clearTimeout(t._timer);
       t._timer = setTimeout(() => t.classList.remove('show'), 2200);
     }
-    function openSheet(id) { document.getElementById(id).classList.add('show'); }
+    function openSheet(id) {
+      lastFocusedEl = document.activeElement;
+      const ov = document.getElementById(id);
+      if (!ov) return;
+      ov.classList.add('show');
+      const focusable = ov.querySelector('input:not([disabled]):not([type="hidden"]), select, textarea, button.close');
+      if (focusable && typeof focusable.focus === 'function') focusable.focus();
+    }
     function closeSheet(id) {
-      document.getElementById(id).classList.remove('show');
+      const ov = document.getElementById(id);
+      if (ov) ov.classList.remove('show');
       if (id === 'expOverlay') editingExpenseId = null;
+      if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
+        try { lastFocusedEl.focus(); } catch (e) { /* ignore */ }
+      }
+      lastFocusedEl = null;
     }
     document.querySelectorAll('[data-close]').forEach(b => {
       b.addEventListener('click', () => closeSheet(b.dataset.close));
@@ -890,22 +991,132 @@
     function balField(ccy) { return ccy === 'VND' ? 'balance_VND' : 'balance'; }
     function balOf(member, ccy) { return Math.round((member && member[balField(ccy)]) || 0); }
 
-    /* ---------------- realtime listeners ---------------- */
-    db.ref('members').on('value', snap => { state.members = snap.val() || {}; renderAll(); });
-    db.ref('expenses').on('value', snap => { state.expenses = snap.val() || {}; renderAll(); });
-    db.ref('payments').on('value', snap => {
-      const newPayments = snap.val() || {};
-      checkForNewPendingRequests(newPayments);
-      state.payments = newPayments;
+    /* ---------------- realtime listeners (global + per-bill scoped) ---------------- */
+    let activeBillListeners = [];
+
+    function detachBillListeners() {
+      activeBillListeners.forEach(({ ref, cb }) => {
+        if (ref && typeof ref.off === 'function') ref.off('value', cb);
+      });
+      activeBillListeners = [];
+    }
+
+    function attachBillListeners() {
+      detachBillListeners();
+      const bind = (ref, cb) => {
+        ref.on('value', cb);
+        activeBillListeners.push({ ref, cb });
+      };
+
+      bind(billRef('members'), snap => { state.members = snap.val() || {}; renderAll(); });
+      bind(billRef('expenses'), snap => { state.expenses = snap.val() || {}; renderAll(); });
+      bind(billRef('payments'), snap => {
+        const newPayments = snap.val() || {};
+        checkForNewPendingRequests(newPayments);
+        state.payments = newPayments;
+        renderAll();
+      });
+      bind(billRef('settings'), snap => {
+        const val = snap.val() || {};
+        state.settings = val;
+        if (currentBillId === 'default') {
+          if (val.adminPin !== undefined) globalAdminPin = val.adminPin;
+          if (val.defaultBillName) defaultBillName = val.defaultBillName;
+          settingsLoaded = true;
+        }
+        renderAll();
+      });
+      bind(billRef('adjustments'), snap => {
+        state.adjustments = snap.val() || {};
+        if (!currentDetailMemberId || !document.getElementById('memberDetailOverlay').classList.contains('show')) return;
+        renderMemberDetailList(currentDetailMemberId);
+      });
+      bind(billRef('logs').limitToLast(60), snap => { renderLogs(snap.val() || {}); });
+    }
+
+    function switchBill(billId, opts) {
+      const targetId = (!billId || billId === 'default' || !state.bills[billId]) ? 'default' : billId;
+      if (targetId === currentBillId && !(opts && opts.force)) {
+        renderBillHeader();
+        return;
+      }
+      currentBillId = targetId;
+      knownPaymentIds = null;
+      currentDetailMemberId = null;
+      editingExpenseId = null;
+      state.members = {};
+      state.expenses = {};
+      state.payments = {};
+      state.adjustments = {};
+      state.settings = {};
+
+      const searchIn = document.getElementById('expenseSearchInput');
+      if (searchIn) searchIn.value = '';
+      const qrInLAK = document.getElementById('qrUrlInput');
+      const qrInVND = document.getElementById('qrUrlInputVND');
+      if (qrInLAK) delete qrInLAK.dataset.dirty;
+      if (qrInVND) delete qrInVND.dataset.dirty;
+      closeSheet('memberDetailOverlay');
+
+      attachBillListeners();
+      updateInviteShare();
       renderAll();
+      renderLogs({});
+      if (document.getElementById('billsOverlay').classList.contains('show')) {
+        renderBillsList();
+      }
+    }
+
+    // Global listeners: Admin PIN, default bill name, active default bill, and bills registry
+    db.ref('settings/adminPin').on('value', snap => {
+      globalAdminPin = snap.val();
+      settingsLoaded = true;
     });
-    db.ref('settings').on('value', snap => { state.settings = snap.val() || {}; settingsLoaded = true; renderAll(); });
-    db.ref('adjustments').on('value', snap => {
-      state.adjustments = snap.val() || {};
-      if (!currentDetailMemberId || !document.getElementById('memberDetailOverlay').classList.contains('show')) return;
-      renderMemberDetailList(currentDetailMemberId);
+    db.ref('settings/defaultBillName').on('value', snap => {
+      defaultBillName = snap.val() || 'ບິນຫຼັກ';
+      renderBillHeader();
+      if (document.getElementById('billsOverlay').classList.contains('show')) renderBillsList();
     });
-    db.ref('logs').limitToLast(60).on('value', snap => { renderLogs(snap.val() || {}); });
+    db.ref('bills').on('value', snap => {
+      state.bills = snap.val() || {};
+      // If user opened with ?bill=<id> and it now loaded, ensure we're attached to it
+      if (urlPinnedBill && requestedUrlBillId && state.bills[requestedUrlBillId] && currentBillId !== requestedUrlBillId) {
+        switchBill(requestedUrlBillId);
+        return;
+      }
+      // If active bill was deleted by another admin, fall back safely to default
+      if (currentBillId !== 'default' && !state.bills[currentBillId]) {
+        switchBill('default');
+        return;
+      }
+      // If no URL param pinned, auto-select globalActiveBillId once bills list arrives
+      if (!urlPinnedBill && globalActiveBillId && globalActiveBillId !== 'default' && state.bills[globalActiveBillId] && currentBillId === 'default' && !userManuallySwitchedBill) {
+        switchBill(globalActiveBillId);
+        return;
+      }
+      renderBillHeader();
+      if (document.getElementById('billsOverlay').classList.contains('show')) renderBillsList();
+    });
+    db.ref('settings/activeBillId').on('value', snap => {
+      globalActiveBillId = snap.val() || 'default';
+      if (!urlPinnedBill && !userManuallySwitchedBill && globalActiveBillId !== currentBillId && (globalActiveBillId === 'default' || state.bills[globalActiveBillId])) {
+        switchBill(globalActiveBillId);
+      }
+    });
+
+    // Check URL ?bill=<id> on startup
+    let requestedUrlBillId = null;
+    let userManuallySwitchedBill = false;
+    try {
+      const params = new URL(window.location.href).searchParams;
+      const b = params.get('bill');
+      if (b && b !== 'default') {
+        requestedUrlBillId = b;
+        urlPinnedBill = true;
+        currentBillId = b;
+      }
+    } catch (e) { /* ignore */ }
+    attachBillListeners();
 
     /* Fire a browser notification when a brand-new pending payment request shows up. */
     function checkForNewPendingRequests(newPayments) {
@@ -928,14 +1139,13 @@
     /* ================================================================
        INVITE / SHARE
        ================================================================ */
-    document.getElementById('inviteQrImg').src =
-      'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(window.location.href);
+    updateInviteShare();
 
     document.getElementById('copyLinkBtn').addEventListener('click', async () => {
-      const url = window.location.href;
+      const url = getBillShareUrl(currentBillId);
       try {
         await navigator.clipboard.writeText(url);
-        toast('ຄັດລອກລິ້ງແລ້ວ 🔗');
+        toast('ຄັດລອກລິ້ງແລ້ວ');
       } catch (e) {
         // clipboard API unavailable/blocked — fall back to a manual prompt
         prompt('ຄັດລອກລິ້ງນີ້ດ້ວຍມື:', url);
@@ -955,17 +1165,26 @@
 
     /* ---------------- audit log ---------------- */
     function writeLog(message) {
-      db.ref('logs').push({
+      billRef('logs').push({
         message,
         role: state.isAdmin ? 'admin' : 'member',
         ts: firebase.database.ServerValue.TIMESTAMP
       });
     }
 
+    function renderBillHeader() {
+      const name = getBillName(currentBillId);
+      const pill = document.getElementById('currentBillLabel');
+      const sub = document.getElementById('groupSubtitle');
+      if (pill) pill.textContent = name;
+      if (sub) sub.textContent = `${name} · LAK & VND`;
+    }
+
     /* ================================================================
        RENDER
        ================================================================ */
     function renderAll() {
+      renderBillHeader();
       renderHero();
       renderBalances();
       renderSettlement();
@@ -991,56 +1210,15 @@
       sel.innerHTML = members.map(m => `<option value="${m.id}" ${m.id === current ? 'selected' : ''}>${escapeHtml(m.name)}</option>`).join('');
     }
 
-    function getHeroRoundTotals() {
-      const exps = Object.values(state.expenses);
-      const resetTs = Number(state.settings.totalResetTs) || 0;
-      const activeExps = resetTs > 0 ? exps.filter(e => (Number(e.ts) || 0) > resetTs) : exps;
-      const roundTotalLAK = activeExps.reduce((s, e) => s + (e.amount_LAK ?? e.amount ?? 0), 0);
-      const roundTotalVND = activeExps.reduce((s, e) => s + (e.amount_VND || 0), 0);
-      return { exps, activeExps, resetTs, roundTotalLAK, roundTotalVND };
-    }
-
     function renderHero() {
-      const { activeExps, resetTs, roundTotalLAK, roundTotalVND } = getHeroRoundTotals();
+      const exps = Object.values(state.expenses);
+      const totalLAK = exps.reduce((s, e) => s + (e.amount_LAK ?? e.amount ?? 0), 0);
+      const totalVND = exps.reduce((s, e) => s + (e.amount_VND || 0), 0);
 
-      const hasOffsetLAK = state.settings.totalOffsetLAK !== undefined && state.settings.totalOffsetLAK !== null;
-      const hasOffsetVND = state.settings.totalOffsetVND !== undefined && state.settings.totalOffsetVND !== null;
-      const hasLegacyLAK = !hasOffsetLAK && !resetTs && state.settings.customTotalLAK !== undefined && state.settings.customTotalLAK !== null;
-      const hasLegacyVND = !hasOffsetVND && !resetTs && state.settings.customTotalVND !== undefined && state.settings.customTotalVND !== null;
-
-      const displayTotalLAK = hasOffsetLAK
-        ? Math.max(0, roundTotalLAK + Number(state.settings.totalOffsetLAK))
-        : (hasLegacyLAK ? Number(state.settings.customTotalLAK) : roundTotalLAK);
-      const displayTotalVND = hasOffsetVND
-        ? Math.max(0, roundTotalVND + Number(state.settings.totalOffsetVND))
-        : (hasLegacyVND ? Number(state.settings.customTotalVND) : roundTotalVND);
-
-      const badgeLAK = document.getElementById('totalLAKOverrideBadge');
-      const badgeVND = document.getElementById('totalVNDOverrideBadge');
-      const showLAKBadge = hasOffsetLAK || hasLegacyLAK || resetTs > 0;
-      const showVNDBadge = hasOffsetVND || hasLegacyVND || resetTs > 0;
-      if (badgeLAK) {
-        badgeLAK.textContent = (hasOffsetLAK || hasLegacyLAK) ? 'ປັບເອງ' : 'ຮອບໃໝ່';
-        badgeLAK.classList.toggle('hidden', !showLAKBadge);
-      }
-      if (badgeVND) {
-        badgeVND.textContent = (hasOffsetVND || hasLegacyVND) ? 'ປັບເອງ' : 'ຮອບໃໝ່';
-        badgeVND.classList.toggle('hidden', !showVNDBadge);
-      }
-
-      document.getElementById('totalExpense').textContent = fmt(displayTotalLAK);
-      document.getElementById('totalExpenseVND').textContent = fmt(displayTotalVND);
+      document.getElementById('totalExpense').textContent = fmt(totalLAK);
+      document.getElementById('totalExpenseVND').textContent = fmt(totalVND);
       document.getElementById('memberCountLabel').textContent = `ສະມາຊິກ ${membersArr().length} ຄົນ`;
-      document.getElementById('expenseCountLabel').textContent = `ລາຍການ ${activeExps.length} ລາຍການ`;
-
-      const inLAK = document.getElementById('customTotalInputLAK');
-      const inVND = document.getElementById('customTotalInputVND');
-      if (inLAK && document.activeElement !== inLAK) {
-        inLAK.value = (hasOffsetLAK || hasLegacyLAK) ? Math.round(displayTotalLAK) : '';
-      }
-      if (inVND && document.activeElement !== inVND) {
-        inVND.value = (hasOffsetVND || hasLegacyVND) ? Math.round(displayTotalVND) : '';
-      }
+      document.getElementById('expenseCountLabel').textContent = `ລາຍການ ${exps.length} ລາຍການ`;
     }
 
     function renderBalances() {
@@ -1115,11 +1293,11 @@
       if (!amount) { toast('ຈຳນວນເງິນບໍ່ຖືກຕ້ອງ'); return; }
 
       Promise.all([
-        db.ref('members/' + collectorId + '/' + field).transaction(cur => Math.round((cur || 0) + amount)),
-        db.ref('members/' + memberId + '/' + field).transaction(cur => Math.round((cur || 0) - amount))
+        billRef('members/' + collectorId + '/' + field).transaction(cur => Math.round((cur || 0) + amount)),
+        billRef('members/' + memberId + '/' + field).transaction(cur => Math.round((cur || 0) - amount))
       ]).then(() => {
         const collectorName = state.members[collectorId]?.name || '—';
-        return db.ref('payments').push({
+        return billRef('payments').push({
           from: collectorId, to: memberId, amountTransferred: amount, resolvedAmount: amount, currency: ccy,
           status: 'approved', note: 'ຄືນເງິນຈາກກອງກາງ', ts: firebase.database.ServerValue.TIMESTAMP
         }).then(() => {
@@ -1336,8 +1514,8 @@
       const delta = amount * adjustSign;
       setLoading(btn, true, 'ບັນທຶກການປັບຍອດ');
 
-      db.ref('members/' + memberId + '/' + balField(ccy)).transaction(cur => Math.round((cur || 0) + delta))
-        .then(() => db.ref('adjustments').push({ memberId, delta, currency: ccy, reason, ts: firebase.database.ServerValue.TIMESTAMP }))
+      billRef('members/' + memberId + '/' + balField(ccy)).transaction(cur => Math.round((cur || 0) + delta))
+        .then(() => billRef('adjustments').push({ memberId, delta, currency: ccy, reason, ts: firebase.database.ServerValue.TIMESTAMP }))
         .then(() => {
           writeLog(`ແອັດມິນປັບຍອດຂອງ ${member.name} ${delta >= 0 ? '+' : ''}${fmtCcy(delta, ccy)}${reason ? ' (' + reason + ')' : ''}`);
           toast('ບັນທຶກການປັບຍອດແລ້ວ');
@@ -1612,7 +1790,7 @@
       const p = state.payments[id];
       if (!p || p.status !== 'pending') return;
       if (!confirm('ຍົກເລີກຄຳຂໍແຈ້ງໂອນນີ້ບໍ?')) return;
-      db.ref('payments/' + id).remove()
+      billRef('payments/' + id).remove()
         .then(() => { writeLog(`ຍົກເລີກຄຳຂໍແຈ້ງໂອນຂອງ ${state.members[p.from]?.name || ''}`); toast('ຍົກເລີກແລ້ວ'); })
         .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'));
     }
@@ -1706,7 +1884,7 @@
         return;
       }
       const entered = document.getElementById('pinInput').value.trim();
-      const real = state.settings.adminPin;
+      const real = (globalAdminPin !== null && globalAdminPin !== undefined) ? globalAdminPin : state.settings.adminPin;
       if (!real) {
         // first-time setup: atomically set PIN only if still unset on server
         if (entered.length < 4) {
@@ -1757,7 +1935,7 @@
       const name = input.value.trim();
       if (!name) { toast('ກະລຸນາໃສ່ຊື່ສະມາຊິກໃໝ່'); return; }
       setLoading(btn, true, '+ ເພີ່ມສະມາຊິກ');
-      const ref = db.ref('members').push();
+      const ref = billRef('members').push();
       ref.set({ name, balance: 0, balance_VND: 0 })
         .then(() => { writeLog(`ເພີ່ມສະມາຊິກໃໝ່: ${name}`); input.value = ''; toast('ເພີ່ມສະມາຊິກແລ້ວ'); })
         .catch(() => toast('ເກີດຂໍ້ຜິດພາດ ລອງອີກຄັ້ງ'))
@@ -1782,7 +1960,7 @@
         return;
       }
       if (!confirm(`ລົບສະມາຊິກ "${m.name}" ແມ່ນບໍ່?`)) return;
-      db.ref('members/' + id).remove()
+      billRef('members/' + id).remove()
         .then(() => { writeLog(`ລົບສະມາຊິກ: ${m.name}`); toast('ລົບສະມາຊິກແລ້ວ'); })
         .catch(() => toast('ເກີດຂໍ້ຜິດພາດ ລອງອີກຄັ້ງ'));
     }
@@ -1853,9 +2031,9 @@
 
       const ops = [
         ...Object.entries(deltaLAK).filter(([, d]) => d !== 0).map(([id, delta]) =>
-          db.ref('members/' + id + '/balance').transaction(cur => Math.round((cur || 0) + delta))),
+          billRef('members/' + id + '/balance').transaction(cur => Math.round((cur || 0) + delta))),
         ...Object.entries(deltaVND).filter(([, d]) => d !== 0).map(([id, delta]) =>
-          db.ref('members/' + id + '/balance_VND').transaction(cur => Math.round((cur || 0) + delta))),
+          billRef('members/' + id + '/balance_VND').transaction(cur => Math.round((cur || 0) + delta))),
       ];
 
       return Promise.all(ops);
@@ -1874,7 +2052,7 @@
 
       // Atomically claim deletion of the expense node first so concurrent deletes cannot double-reverse balances
       let deletedSnapshot = null;
-      db.ref('expenses/' + id).transaction(cur => {
+      billRef('expenses/' + id).transaction(cur => {
         if (!cur) return; // already deleted — abort
         deletedSnapshot = cur;
         return null;
@@ -2110,12 +2288,12 @@
 
         const memberOps = [
           ...Object.entries(deltaLAK).filter(([, d]) => d !== 0).map(([id, delta]) =>
-            db.ref('members/' + id + '/balance').transaction(current => Math.round((current || 0) + delta))),
+            billRef('members/' + id + '/balance').transaction(current => Math.round((current || 0) + delta))),
           ...Object.entries(deltaVND).filter(([, d]) => d !== 0).map(([id, delta]) =>
-            db.ref('members/' + id + '/balance_VND').transaction(current => Math.round((current || 0) + delta))),
+            billRef('members/' + id + '/balance_VND').transaction(current => Math.round((current || 0) + delta))),
         ];
 
-        const expenseRef = isEditing ? db.ref('expenses/' + targetExpenseId) : db.ref('expenses').push();
+        const expenseRef = isEditing ? billRef('expenses/' + targetExpenseId) : billRef('expenses').push();
 
         return Promise.all(memberOps)
           .then(() => expenseRef.set(expenseData))
@@ -2227,7 +2405,7 @@
       errEl.classList.remove('show');
       setLoading(btn, true, 'ສົ່ງຄຳຂໍແຈ້ງໂອນເງິນ');
 
-      db.ref('payments').push({
+      billRef('payments').push({
         from, to, amountTransferred: amount, currency, status: 'pending',
         ts: firebase.database.ServerValue.TIMESTAMP
       }).then(() => {
@@ -2260,7 +2438,7 @@
 
       // Atomically claim the pending payment first so double-clicks or concurrent admins cannot double-apply balances
       let claimedPayment = null;
-      return db.ref('payments/' + id).transaction(cur => {
+      return billRef('payments/' + id).transaction(cur => {
         if (!cur || cur.status !== 'pending') return; // abort if already processed or cancelled
         claimedPayment = { ...cur };
         return { ...cur, status: newStatus, resolvedAmount };
@@ -2271,10 +2449,10 @@
         }
         const ops = [];
         if (state.members[claimedPayment.from]) {
-          ops.push(db.ref('members/' + claimedPayment.from + '/' + field).transaction(cur => Math.round((cur || 0) + resolvedAmount)));
+          ops.push(billRef('members/' + claimedPayment.from + '/' + field).transaction(cur => Math.round((cur || 0) + resolvedAmount)));
         }
         if (state.members[claimedPayment.to]) {
-          ops.push(db.ref('members/' + claimedPayment.to + '/' + field).transaction(cur => Math.round((cur || 0) - resolvedAmount)));
+          ops.push(billRef('members/' + claimedPayment.to + '/' + field).transaction(cur => Math.round((cur || 0) - resolvedAmount)));
         }
         return Promise.all(ops).then(() => {
           const fromName = state.members[claimedPayment.from]?.name || '—';
@@ -2328,7 +2506,7 @@
       pendingPaymentOps.add(targetId);
       setLoading(btn, true, 'ຢືນຢັນປະຕິເສດ');
       let rejectedFrom = null;
-      db.ref('payments/' + targetId).transaction(cur => {
+      billRef('payments/' + targetId).transaction(cur => {
         if (!cur || cur.status !== 'pending') return; // do not resurrect cancelled/deleted payment
         rejectedFrom = cur.from;
         return { ...cur, status: 'rejected', rejectReason: reason };
@@ -2358,7 +2536,7 @@
       const id = document.getElementById('collectorSelect').value;
       if (!id) { toast('ກະລຸນາໃຫ້ເພີ່ມສະມາຊິກກ່ອນ'); return; }
       setLoading(btn, true, 'ບັນທຶກຜູ້ດູແລ');
-      db.ref('settings/collectorMemberId').set(id)
+      billRef('settings/collectorMemberId').set(id)
         .then(() => { writeLog(`ຕັ້ງ "${state.members[id]?.name}" ເປັນຜູ້ດູແລກອງກາງ`); toast('ບັນທຶກແລ້ວ'); })
         .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'))
         .finally(() => setLoading(btn, false, 'ບັນທຶກຜູ້ດູແລ'));
@@ -2373,7 +2551,7 @@
       const input = document.getElementById('qrUrlInput');
       const url = input.value.trim();
       setLoading(btn, true, 'ບັນທຶກ QR ກີບ');
-      db.ref('settings/qrImageUrl').set(url)
+      billRef('settings/qrImageUrl').set(url)
         .then(() => { delete input.dataset.dirty; writeLog('ອັບເດດລິ້ງຮູບ QR BCEL One (ກີບ)'); toast('ບັນທຶກແລ້ວ'); })
         .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'))
         .finally(() => setLoading(btn, false, 'ບັນທຶກ QR ກີບ'));
@@ -2388,7 +2566,7 @@
       const input = document.getElementById('qrUrlInputVND');
       const url = input.value.trim();
       setLoading(btn, true, 'ບັນທຶກ QR VND');
-      db.ref('settings/qrImageUrlVND').set(url)
+      billRef('settings/qrImageUrlVND').set(url)
         .then(() => { delete input.dataset.dirty; writeLog('ອັບເດດລິ້ງຮູບ QR VND (ເງິນເວຍດນາມ)'); toast('ບັນທຶກແລ້ວ'); })
         .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'))
         .finally(() => setLoading(btn, false, 'ບັນທຶກ QR VND'));
@@ -2627,70 +2805,186 @@
     });
 
     /* ================================================================
-           ADMIN: CUSTOM TOTAL EXPENSE OVERRIDE / NEW-ROUND RESET
-           ================================================================ */
-    document.getElementById('saveCustomTotalBtn')?.addEventListener('click', () => {
+       MULTI-BILL / MULTI-LEDGER MANAGEMENT (SWITCH, CREATE, RENAME, DELETE)
+       ================================================================ */
+    function renderBillsList() {
+      const list = document.getElementById('billsList');
+      if (!list) return;
+      const otherBills = Object.entries(state.bills || {})
+        .map(([id, b]) => ({ id, name: (b && b.name) || 'ບິນ', createdAt: (b && b.createdAt) || 0, isDefault: false }))
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      const allBills = [
+        ...otherBills,
+        { id: 'default', name: defaultBillName || 'ບິນຫຼັກ', createdAt: 0, isDefault: true }
+      ];
+
+      list.innerHTML = allBills.map(b => {
+        const isActive = b.id === currentBillId;
+        const metaText = b.isDefault
+          ? 'ບິນເລີ່ມຕົ້ນ (ຂໍ້ມູນເດີມ)'
+          : (b.createdAt ? `ສ້າງເມື່ອ ${formatLaoDate(b.createdAt)}` : 'ບິນທີ່ສ້າງເພີ່ມ');
+        const activeTag = isActive ? '<span class="tag collector">ກຳລັງເບິ່ງ</span>' : '';
+        const adminBtns = state.isAdmin ? `
+          <div class="bill-item-actions">
+            <button type="button" class="bill-icon-btn" data-rename-bill="${escapeHtml(b.id)}" aria-label="ປ່ຽນຊື່ບິນ" title="ປ່ຽນຊື່ບິນ">
+              <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            </button>
+            ${!b.isDefault ? `<button type="button" class="bill-icon-btn danger" data-delete-bill="${escapeHtml(b.id)}" aria-label="ລົບບິນນີ້" title="ລົບບິນນີ້">
+              <svg class="ico ico-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </button>` : ''}
+          </div>` : '';
+
+        return `<div class="bill-item ${isActive ? 'active' : ''}" ${isActive ? 'aria-current="true"' : ''}>
+          <button type="button" class="bill-item-main" data-select-bill="${escapeHtml(b.id)}">
+            <div class="bill-item-title">
+              <span>${escapeHtml(b.name)}</span>
+              ${activeTag}
+            </div>
+            <div class="bill-item-meta">${metaText}</div>
+          </button>
+          ${adminBtns}
+        </div>`;
+      }).join('');
+
+      list.querySelectorAll('[data-select-bill]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.dataset.selectBill;
+          userManuallySwitchedBill = true;
+          urlPinnedBill = targetId !== 'default';
+          requestedUrlBillId = targetId !== 'default' ? targetId : null;
+          switchBill(targetId);
+          closeSheet('billsOverlay');
+          toast(`ສະຫຼັບໄປ "${getBillName(targetId)}" ແລ້ວ`);
+        });
+      });
+
+      list.querySelectorAll('[data-rename-bill]').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          renameBill(btn.dataset.renameBill);
+        });
+      });
+
+      list.querySelectorAll('[data-delete-bill]').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          deleteBill(btn.dataset.deleteBill);
+        });
+      });
+    }
+
+    function openBillsModal() {
+      renderBillsList();
+      openSheet('billsOverlay');
+    }
+
+    function openNewBillModal() {
       if (!requireAdmin()) return;
-      const btn = document.getElementById('saveCustomTotalBtn');
-      const valLAK = document.getElementById('customTotalInputLAK').value.trim();
-      const valVND = document.getElementById('customTotalInputVND').value.trim();
+      closeSheet('billsOverlay');
+      document.getElementById('newBillNameInput').value = '';
+      document.getElementById('newBillCopyMembers').checked = false;
+      document.getElementById('newBillCopyQr').checked = true;
+      document.getElementById('newBillErr').classList.remove('show');
+      openSheet('newBillOverlay');
+    }
 
-      if ((valLAK !== '' && (!Number.isFinite(Number(valLAK)) || Number(valLAK) < 0))
-        || (valVND !== '' && (!Number.isFinite(Number(valVND)) || Number(valVND) < 0))) {
-        toast('ຈຳນວນເງິນຕ້ອງເປັນໂຕເລກທີ່ຕັ້ງແຕ່ 0 ຂຶ້ນໄປ');
-        return;
-      }
+    function renameBill(billId) {
+      if (!requireAdmin()) return;
+      const curName = getBillName(billId);
+      const nextName = prompt('ປ່ຽນຊື່ບິນ:', curName);
+      if (nextName === null) return;
+      const trimmed = nextName.trim();
+      if (!trimmed) { toast('ຊື່ບິນຕ້ອງບໍ່ຫວ່າງ'); return; }
+      const targetRef = billId === 'default'
+        ? db.ref('settings/defaultBillName')
+        : db.ref('bills/' + billId + '/name');
+      targetRef.set(trimmed)
+        .then(() => { toast('ປ່ຽນຊື່ບິນແລ້ວ'); renderBillsList(); })
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'));
+    }
 
-      // Store as an offset relative to current round total so future new bills keep adding on top
-      const { roundTotalLAK, roundTotalVND } = getHeroRoundTotals();
-      const updates = {
-        'settings/totalOffsetLAK': valLAK === '' ? null : (Math.round(Number(valLAK)) - roundTotalLAK),
-        'settings/totalOffsetVND': valVND === '' ? null : (Math.round(Number(valVND)) - roundTotalVND),
-        'settings/customTotalLAK': null,
-        'settings/customTotalVND': null
-      };
-
-      setLoading(btn, true, 'ບັນທຶກຍອດລວມ');
+    function deleteBill(billId) {
+      if (!requireAdmin()) return;
+      if (!billId || billId === 'default') { toast('ບໍ່ສາມາດລົບບິນຫຼັກໄດ້'); return; }
+      const name = getBillName(billId);
+      if (!confirm(`ລົບບິນ "${name}" ແລະ ຂໍ້ມູນທັງໝົດໃນບິນນີ້ແມ່ນບໍ່? (ກູ້ຄືນບໍ່ໄດ້)`)) return;
+      const updates = {};
+      updates['bills/' + billId] = null;
+      updates['billData/' + billId] = null;
+      if (globalActiveBillId === billId) updates['settings/activeBillId'] = 'default';
       db.ref().update(updates)
-        .then(() => { writeLog('ແອັດມິນແກ້ໄຂຍອດລວມທັງໝົດແລ້ວ'); toast('ແກ້ໄຂຍອດລວມສຳເລັດແລ້ວ'); })
-        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'))
-        .finally(() => setLoading(btn, false, 'ບັນທຶກຍອດລວມ'));
-    });
-
-    document.getElementById('resetTotalZeroBtn')?.addEventListener('click', () => {
-      if (!requireAdmin()) return;
-      if (!confirm('ຕ້ອງການຮີເຊັດຍອດລວມເປັນ 0 ເພື່ອເລີ່ມນັບບິນຮອບໃໝ່ແມ່ນບໍ່? (ປະຫວັດບິນເກົ່າຍັງເກັບໄວ້)')) return;
-      db.ref().update({
-        'settings/totalResetTs': firebase.database.ServerValue.TIMESTAMP,
-        'settings/totalOffsetLAK': null,
-        'settings/totalOffsetVND': null,
-        'settings/customTotalLAK': null,
-        'settings/customTotalVND': null
-      })
         .then(() => {
-          writeLog('ແອັດມິນຮີເຊັດຍອດລວມເປັນ 0 (ເລີ່ມນັບຮອບໃໝ່)');
-          document.getElementById('customTotalInputLAK').value = '';
-          document.getElementById('customTotalInputVND').value = '';
-          toast('ຮີເຊັດເປັນ 0 ແລ້ວ — ບິນໃໝ່ຈະເລີ່ມນັບຕໍ່ຈາກ 0');
+          if (currentBillId === billId) {
+            userManuallySwitchedBill = true;
+            switchBill('default');
+          }
+          toast(`ລົບບິນ "${name}" ແລ້ວ`);
+          renderBillsList();
         })
         .catch(() => toast('ເກີດຂໍ້ຜິດພາດ'));
-    });
+    }
 
-    document.getElementById('restoreAutoTotalBtn')?.addEventListener('click', () => {
+    document.getElementById('billSwitcherBtn')?.addEventListener('click', openBillsModal);
+    document.getElementById('openBillListBtn')?.addEventListener('click', openBillsModal);
+    document.getElementById('openNewBillBtn')?.addEventListener('click', openNewBillModal);
+    document.getElementById('createBillFromListBtn')?.addEventListener('click', openNewBillModal);
+
+    document.getElementById('confirmNewBillBtn')?.addEventListener('click', () => {
       if (!requireAdmin()) return;
-      db.ref().update({
-        'settings/totalResetTs': null,
-        'settings/totalOffsetLAK': null,
-        'settings/totalOffsetVND': null,
-        'settings/customTotalLAK': null,
-        'settings/customTotalVND': null
-      })
+      const btn = document.getElementById('confirmNewBillBtn');
+      const errEl = document.getElementById('newBillErr');
+      const name = document.getElementById('newBillNameInput').value.trim();
+      const copyMembers = document.getElementById('newBillCopyMembers').checked;
+      const copyQr = document.getElementById('newBillCopyQr').checked;
+
+      if (!name) {
+        errEl.classList.add('show');
+        return;
+      }
+      errEl.classList.remove('show');
+      setLoading(btn, true, 'ສ້າງບິນໃໝ່');
+
+      const newRef = db.ref('bills').push();
+      const newId = newRef.key || ('bill_' + Date.now());
+      const newSettings = {};
+      if (copyQr) {
+        if (state.settings.qrImageUrl) newSettings.qrImageUrl = state.settings.qrImageUrl;
+        if (state.settings.qrImageUrlVND) newSettings.qrImageUrlVND = state.settings.qrImageUrlVND;
+      }
+
+      const newMembers = {};
+      if (copyMembers) {
+        Object.entries(state.members).forEach(([mid, m]) => {
+          if (m && m.name) newMembers[mid] = { name: m.name, balance: 0, balance_VND: 0 };
+        });
+        if (state.settings.collectorMemberId && newMembers[state.settings.collectorMemberId]) {
+          newSettings.collectorMemberId = state.settings.collectorMemberId;
+        }
+      }
+
+      const updates = {};
+      updates['bills/' + newId] = { name, createdAt: firebase.database.ServerValue.TIMESTAMP };
+      updates['billData/' + newId + '/settings'] = newSettings;
+      if (Object.keys(newMembers).length > 0) {
+        updates['billData/' + newId + '/members'] = newMembers;
+      }
+      updates['settings/activeBillId'] = newId;
+
+      db.ref().update(updates)
         .then(() => {
-          writeLog('ແອັດມິນຄືນຄ່າຄຳນວນຍອດລວມທັງໝົດເປັນແບບອັດຕະໂນມັດ');
-          document.getElementById('customTotalInputLAK').value = '';
-          document.getElementById('customTotalInputVND').value = '';
-          toast('ຄືນຄ່າການຄຳນວນລວມທັງໝົດແລ້ວ');
-        }).catch(() => toast('ເກີດຂໍ້ຜິດພາດ'));
+          // Ensure local registry knows the new bill before switching immediately
+          state.bills[newId] = { name, createdAt: Date.now() };
+          userManuallySwitchedBill = true;
+          urlPinnedBill = true;
+          requestedUrlBillId = newId;
+          switchBill(newId, { force: true });
+          writeLog(`ສ້າງບິນໃໝ່ "${name}"`);
+          closeSheet('newBillOverlay');
+          toast(`ສ້າງບິນ "${name}" ສຳເລັດແລ້ວ`);
+        })
+        .catch(() => toast('ເກີດຂໍ້ຜິດພາດ ລອງໃໝ່ອີກຄັ້ງ'))
+        .finally(() => setLoading(btn, false, 'ສ້າງບິນໃໝ່'));
     });
 
 
